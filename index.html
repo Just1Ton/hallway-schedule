@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>School Day Display</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0a0e1a;--panel:#111827;--panel2:#0d1320;
+  --border:#2a3245;--border2:#1e2a3d;
+  --blue-border:#2e5080;--blue-bg:#1a2d4a;--blue-dark:#0f2040;
+  --blue-accent:#7eb8f7;--blue-mid:#4a7aad;--blue-dim:#2e4a6a;
+  --green-bg:#0d1a10;--green-border:#1a3a22;--green-text:#4a8060;--green-accent:#7ec89a;
+  --text:#e8e4d8;--text2:#9aacbf;--text3:#6b7a99;--text4:#4a6080;
+  --muted:#8a9ab5;
+}
+body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* ── DISPLAY SCREEN ── */
+#display-screen{padding:1.5rem;display:grid;grid-template-columns:33vw 1fr;grid-template-rows:auto 1fr;gap:1.25rem;min-height:100vh;}
+#left-panel{grid-column:1;grid-row:1/3;display:flex;flex-direction:column;justify-content:space-between;background:var(--panel);border:0.5px solid var(--border);border-radius:16px;padding:2rem 1.75rem;}
+.school-name{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:300;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+.clock-wrap{margin:.75rem 0;}
+.clock-time{font-family:'Fraunces',serif;font-weight:700;line-height:1;color:#f0ebe0;letter-spacing:-.03em;display:grid;grid-template-rows:auto auto;justify-items:start;font-variant-numeric:tabular-nums;}
+.clock-hm{font-size:clamp(2.5rem, 11vw, 8rem);white-space:nowrap;min-width:2.4ch;}
+.clock-seconds-row{display:flex;align-items:baseline;gap:.35em;}
+.clock-seconds{font-size:clamp(1.5rem, 6.5vw, 4.8rem);color:#4a6a8a;font-weight:300;white-space:nowrap;display:inline-block;width:2ch;font-variant-numeric:tabular-nums;}
+.clock-ampm{font-size:clamp(1rem, 3vw, 1.8rem);color:var(--blue-mid);}
+.clock-ampm{font-size:1.8rem;color:var(--blue-mid);}
+.clock-date{font-size:1rem;color:var(--text3);margin-top:.4rem;}
+.day-badge{display:inline-block;background:var(--blue-bg);border:0.5px solid var(--blue-border);border-radius:8px;padding:.45rem 1rem;font-size:.9rem;color:var(--blue-accent);letter-spacing:.08em;margin-bottom:.9rem;}
+.now-card{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:12px;padding:1.25rem;cursor:pointer;}
+.now-card:hover{border-color:#3a6090;}
+.now-label{font-size:.75rem;color:var(--blue-mid);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.45rem;}
+.now-name{font-family:'Fraunces',serif;font-size:1.5rem;color:var(--blue-accent);font-weight:700;}
+.now-time{font-size:.9rem;color:var(--blue-mid);margin-top:.15rem;}
+.prog-wrap{background:#0d1626;border-radius:3px;height:6px;margin-top:.75rem;overflow:hidden;}
+.prog-bar{height:100%;background:var(--blue-border);border-radius:3px;transition:width 1s linear;}
+.prog-remain{font-size:.78rem;color:var(--blue-mid);margin-top:.35rem;text-align:right;}
+#right-top{grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:space-between;}
+.header-title{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:300;color:#c8bfa8;}
+.header-right{display:flex;align-items:center;gap:.75rem;}
+.day-pill{font-size:.65rem;color:#4a5568;letter-spacing:.1em;text-transform:uppercase;background:#1a1f2e;border:0.5px solid var(--border);border-radius:5px;padding:.28rem .7rem;}
+#sched-list{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:.3rem;overflow-y:auto;}
+.pr{display:grid;grid-template-columns:minmax(0,8rem) 1fr minmax(0,6rem);align-items:center;gap:.5rem;padding:.55rem .9rem;border-radius:10px;border:0.5px solid transparent;position:relative;flex:1;min-height:2.5rem;max-height:8rem;overflow:hidden;}
+.pr.past{opacity:.28;}
+.pr.future{background:var(--panel);border-color:var(--border2);}
+.pr.current{--pct:0%;background:linear-gradient(to right, #1a3a6a var(--pct), var(--blue-dark) var(--pct));border-color:var(--blue-border);}
+.pr.current::before{content:'';position:absolute;left:0;top:12%;height:76%;width:3px;background:var(--blue-accent);border-radius:0 3px 3px 0;}
+.pr.eod{background:var(--green-bg);border-color:transparent;}
+.pr.eod.future{border-color:transparent;}
+.pr.eod.current{--pct:0%;background:linear-gradient(to right, #0d3020 var(--pct), #0d2018 var(--pct));border-color:#1e5030;}
+.pr.noschool{background:#1a1010;border-color:#2a1a1a;}
+.prt{font-size:var(--row-fs, .72rem);color:var(--text4);white-space:nowrap;}
+.pr.current .prt{color:#5a8bbf;}
+.prn{font-size:var(--row-fs, .82rem);color:var(--text2);white-space:nowrap;overflow:hidden;}
+.pr.current .prn{color:#c8dff5;font-weight:500;}
+.pr.eod .prn{color:var(--green-text);font-style:italic;}
+.pr.eod.current .prn{color:var(--green-accent);}
+.pre{font-size:var(--row-fs, .65rem);color:var(--blue-dim);text-align:right;white-space:nowrap;}
+.pr.current .pre{color:var(--blue-mid);}
+.brk .prn{font-style:italic;color:#3a4a5a;}
+.brk.current .prn{color:#5a7a9a;}
+.eod-tag{font-size:.56rem;color:#2a4a3a;margin-left:4px;}
+.ndot{display:inline-block;width:5px;height:5px;background:var(--blue-accent);border-radius:50%;margin-right:5px;vertical-align:middle;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+#noschool-screen{display:none;padding:1.5rem;min-height:100vh;}
+#noschool-screen.visible{display:flex;flex-direction:column;}
+#left-panel-ns{display:none;}
+.noschool-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--panel);border:0.5px solid var(--border);border-radius:16px;position:relative;overflow:hidden;gap:.5rem;}
+.noschool-clock{text-align:center;}
+.noschool-clock .clock-time{justify-items:center;}
+.noschool-clock .clock-date{font-size:1rem;color:var(--text3);margin-top:.3rem;text-align:center;}
+.noschool-divider{width:4rem;height:1px;background:var(--border);margin:.75rem 0;}
+.noschool-icon{font-size:3rem;margin-bottom:.5rem;opacity:.4;}
+.noschool-title{font-family:'Fraunces',serif;font-size:3rem;font-weight:700;color:#c8bfa8;margin-bottom:.25rem;}
+.noschool-sub{font-size:.9rem;color:var(--text3);}
+#sleeping-cat{position:absolute;bottom:1.25rem;right:1.25rem;cursor:pointer;opacity:0;transition:opacity .4s,transform .25s;}
+#sleeping-cat:hover{opacity:.85;transform:scale(1.12);}
+@keyframes breathe{0%,100%{transform:scaleY(1);}50%{transform:scaleY(1.04);}}
+#cat-body{animation:breathe 3.5s ease-in-out infinite;transform-origin:center bottom;}
+@keyframes zzz{0%{opacity:0;transform:translate(0,0) scale(.7);}40%{opacity:1;}100%{opacity:0;transform:translate(12px,-18px) scale(1.1);}}
+.zz1{animation:zzz 2.4s ease-in-out infinite;}
+.zz2{animation:zzz 2.4s ease-in-out .8s infinite;}
+.zz3{animation:zzz 2.4s ease-in-out 1.6s infinite;}
+
+@media (max-aspect-ratio: 1/1) {
+  #display-screen{grid-template-columns:1fr;grid-template-rows:auto auto 1fr;min-height:100vh;padding:1.5vw;gap:1.5vw;}
+  #left-panel{grid-column:1;grid-row:1;flex-direction:row;align-items:stretch;justify-content:space-between;gap:2vw;padding:2.5vw 3vw;}
+  .left-clock-block{display:flex;flex-direction:column;justify-content:space-between;flex:0 0 clamp(120px, 42vw, 260px);min-width:0;overflow:hidden;}
+  .school-name{font-size:clamp(.65rem, 2.8vw, 1.1rem);}
+  .clock-wrap{margin:0;}
+  .clock-hm{font-size:clamp(2rem, 13vw, 6rem);}
+  .clock-seconds{font-size:clamp(1.2rem, 7.5vw, 3.5rem);}
+  .clock-ampm{font-size:clamp(.8rem, 3.5vw, 1.6rem);}
+  .clock-date{font-size:clamp(.6rem, 2.2vw, 1rem);margin-top:.2em;}
+  #left-panel > div:last-child{flex:1;display:flex;flex-direction:column;justify-content:flex-end;min-width:0;}
+  .day-badge{display:inline-block;font-size:clamp(.6rem, 2.2vw, .9rem);padding:.3em .7em;margin-bottom:.5em;}
+  .now-card{flex:1;min-width:0;}
+  .now-label{font-size:clamp(.5rem, 1.8vw, .75rem);}
+  .now-name{font-size:clamp(.85rem, 3.5vw, 1.5rem);}
+  .now-time{font-size:clamp(.6rem, 2vw, .9rem);}
+  .prog-remain{font-size:clamp(.5rem, 1.8vw, .78rem);}
+  #right-top{grid-column:1;grid-row:2;}
+  #sched-list{grid-column:1;grid-row:3;}
+}
+
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(5,8,18,.92);z-index:100;overflow-y:auto;padding:1.5rem;}
+#modal-overlay.open{display:block;}
+#modal{background:var(--panel);border:0.5px solid #2a3a55;border-radius:16px;padding:2rem;max-width:680px;margin:0 auto;}
+#modal h2{font-family:'Fraunces',serif;font-size:1.2rem;color:#c8bfa8;font-weight:300;margin-bottom:1.5rem;}
+.tab-bar{display:flex;gap:.35rem;margin-bottom:1.25rem;flex-wrap:wrap;}
+.tab{background:transparent;border:0.5px solid var(--border);border-radius:7px;color:var(--text3);font-family:'DM Mono',monospace;font-size:.72rem;padding:.32rem .75rem;cursor:pointer;letter-spacing:.04em;}
+.tab:hover{background:#1a1f2e;}
+.tab.active{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue-accent);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.mf{margin-bottom:.85rem;}
+.mf label{display:block;font-size:.66rem;color:var(--text4);letter-spacing:.1em;margin-bottom:.28rem;text-transform:uppercase;}
+.mf input,.mf select{background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:7px;color:#c8dff5;font-family:'DM Mono',monospace;font-size:.8rem;padding:.42rem .7rem;}
+.mf input{width:100%;}
+.mf select{width:100%;cursor:pointer;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.esec{font-size:.66rem;color:#3a4a5a;letter-spacing:.1em;text-transform:uppercase;margin:1rem 0 .45rem;padding-bottom:.25rem;border-bottom:0.5px solid #1a2535;}
+.srow{display:grid;grid-template-columns:1fr 76px 76px 26px;gap:.35rem;align-items:center;margin-bottom:.35rem;}
+.srow input{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
+.rmv-btn{background:transparent;border:0.5px solid #3a2a2a;border-radius:5px;color:#6a3a3a;font-size:.9rem;cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rmv-btn:hover{background:#2a1515;color:#c05050;}
+.add-btn{background:#0a1a0a;border:0.5px solid #1a3a1a;border-radius:7px;color:#3a7a4a;font-family:'DM Mono',monospace;font-size:.72rem;padding:.38rem .85rem;cursor:pointer;width:100%;margin-top:.3rem;}
+.add-btn:hover{background:#0f2a0f;}
+.eod-row{display:grid;grid-template-columns:1fr 88px;gap:.35rem;align-items:center;margin-bottom:.3rem;}
+.eod-row input{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
+.eod-note{font-size:.64rem;color:#2a5a3a;margin-top:.25rem;}
+.list-row{display:grid;grid-template-columns:100px 1fr 26px;gap:.5rem;align-items:center;margin-bottom:.35rem;}
+.list-row input,.list-row select{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
+.ns-row{display:grid;grid-template-columns:110px 1fr 26px;gap:.5rem;align-items:center;margin-bottom:.35rem;}
+.ns-row input{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
+.anchor-box{background:#0d1626;border:0.5px solid var(--blue-border);border-radius:10px;padding:1rem;margin-top:.75rem;}
+.anchor-box p{font-size:.72rem;color:var(--text3);line-height:1.6;margin-bottom:.75rem;}
+.anchor-grid{display:grid;grid-template-columns:130px 1fr auto;gap:.5rem;align-items:center;}
+.anchor-grid input,.anchor-grid select{padding:.38rem .6rem;font-size:.76rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:6px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
+.anchor-set-btn{background:var(--blue-bg);border:0.5px solid var(--blue-border);border-radius:7px;color:var(--blue-accent);font-family:'DM Mono',monospace;font-size:.72rem;padding:.38rem .8rem;cursor:pointer;white-space:nowrap;}
+.anchor-set-btn:hover{background:#1f3a60;}
+.anchor-current{font-size:.68rem;color:var(--text3);margin-top:.6rem;}
+.anchor-current span{color:var(--blue-accent);}
+.mac{display:flex;gap:.65rem;margin-top:1.5rem;justify-content:flex-end;}
+.btn-save{background:#1a3a6a;border:0.5px solid var(--blue-border);border-radius:8px;color:var(--blue-accent);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1.2rem;cursor:pointer;}
+.btn-cancel{background:transparent;border:0.5px solid var(--border);border-radius:8px;color:var(--text3);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1.2rem;cursor:pointer;}
+.info-note{font-size:.68rem;color:var(--text4);background:#0d1320;border:0.5px solid var(--border2);border-radius:7px;padding:.6rem .8rem;line-height:1.6;margin-bottom:.85rem;}
+#loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200;}
+.loading-text{font-family:'Fraunces',serif;font-size:1.5rem;color:var(--text3);font-weight:300;}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen"><div class="loading-text">Loading...</div></div>
+
+<!-- DISPLAY SCREEN -->
+<div id="display-screen" style="display:none;">
+  <div id="left-panel">
+    <div class="left-clock-block">
+      <div class="school-name" id="d-school">School</div>
+      <div class="clock-wrap">
+        <div class="clock-time"><span class="clock-hm" id="d-time">--:--</span><div class="clock-seconds-row"><span class="clock-seconds" id="d-secs">00</span><span class="clock-ampm" id="d-ampm"></span></div></div>
+        <div class="clock-date" id="d-date"></div>
+      </div>
+    </div>
+    <div>
+      <div class="day-badge" id="d-daybadge">Day 1</div>
+      <div class="now-card" onclick="openModal()">
+        <div class="now-label" id="d-nowlabel">Now in session</div>
+        <div class="now-name" id="d-nowname">—</div>
+        <div class="now-time" id="d-nowtime"></div>
+        <div class="prog-wrap"><div class="prog-bar" id="d-progbar" style="width:0%"></div></div>
+        <div class="prog-remain" id="d-remain"></div>
+      </div>
+    </div>
+  </div>
+  <div id="right-top">
+    <div class="header-title" id="d-override-label">Today's Schedule</div>
+    <div class="header-right"><div class="day-pill" id="d-weekday"></div></div>
+  </div>
+  <div id="sched-list"></div>
+</div>
+
+<!-- NO SCHOOL SCREEN -->
+<div id="noschool-screen">
+  <div id="left-panel-ns"></div>
+  <div class="noschool-main">
+    <div class="noschool-clock">
+      <div class="school-name" id="ns-school" style="text-align:center;margin-bottom:.5rem;"></div>
+      <div class="clock-time"><span class="clock-hm" id="ns-time">--:--</span><div class="clock-seconds-row"><span class="clock-seconds" id="ns-secs">00</span><span class="clock-ampm" id="ns-ampm"></span></div></div>
+      <div class="clock-date" id="ns-date"></div>
+    </div>
+    <div class="noschool-divider"></div>
+    <div class="noschool-icon">&#9790;</div>
+    <div class="noschool-title" id="ns-title">No School Today</div>
+    <div class="noschool-sub" id="ns-sub">Enjoy your day off</div>
+    <svg id="sleeping-cat" onclick="openModal()" width="96" height="72" viewBox="0 0 96 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g id="cat-body">
+        <ellipse cx="48" cy="56" rx="30" ry="14" fill="#2a4a2a" stroke="#3a6a3a" stroke-width="1.5"/>
+        <ellipse cx="48" cy="57" rx="18" ry="9" fill="#3a5a3a" opacity=".6"/>
+        <ellipse cx="32" cy="40" rx="9" ry="8" fill="#2a4a2a" stroke="#3a6a3a" stroke-width="1.5"/>
+        <ellipse cx="64" cy="40" rx="9" ry="8" fill="#2a4a2a" stroke="#3a6a3a" stroke-width="1.5"/>
+        <ellipse cx="48" cy="46" rx="20" ry="14" fill="#2a4a2a" stroke="#3a6a3a" stroke-width="1.5"/>
+        <path d="M27 40 Q32 37 37 40" stroke="#7ec87e" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M59 40 Q64 37 69 40" stroke="#7ec87e" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M40 52 Q48 57 56 52" stroke="#3a6a3a" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <circle cx="44" cy="49" r="1.2" fill="#3a6a3a"/>
+        <circle cx="52" cy="49" r="1.2" fill="#3a6a3a"/>
+        <path d="M22 58 Q14 62 12 68" stroke="#2a4a2a" stroke-width="4" stroke-linecap="round" fill="none"/>
+        <circle cx="10" cy="69" r="2" fill="#2a4a2a" stroke="#3a6a3a" stroke-width="1"/>
+        <circle cx="13" cy="71" r="2" fill="#2a4a2a" stroke="#3a6a3a" stroke-width="1"/>
+        <circle cx="16" cy="70" r="2" fill="#2a4a2a" stroke="#3a6a3a" stroke-width="1"/>
+        <path d="M74 58 Q82 62 84 68" stroke="#2a4a2a" stroke-width="4" stroke-linecap="round" fill="none"/>
+        <circle cx="80" cy="71" r="2" fill="#2a4a2a" stroke="#3a6a3a" stroke-width="1"/>
+        <circle cx="83" cy="69" r="2" fill="#2a4a2a" stroke="#3a6a3a" stroke-width="1"/>
+        <circle cx="86" cy="70" r="2" fill="#2a4a2a" stroke="#3a6a3a" stroke-width="1"/>
+      </g>
+      <text class="zz1" x="54" y="32" font-size="10" fill="#7ec87e" font-family="Fraunces,serif" font-weight="700" opacity="0">z</text>
+      <text class="zz2" x="62" y="22" font-size="13" fill="#7ec87e" font-family="Fraunces,serif" font-weight="700" opacity="0">z</text>
+      <text class="zz3" x="72" y="10" font-size="16" fill="#7ec87e" font-family="Fraunces,serif" font-weight="700" opacity="0">z</text>
+    </svg>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+<div id="modal">
+  <h2>Schedule Settings</h2>
+  <div class="tab-bar" id="tab-bar"></div>
+  <div class="tab-panel" id="tab-general">
+    <div class="mf"><label>School Name</label><input type="text" id="g-schoolname"/></div>
+    <div class="row2">
+      <div class="mf">
+        <label>Rotation Length (days)</label>
+        <select id="g-rotlen"></select>
+      </div>
+      <div class="mf">
+        <label>Rotation Mode</label>
+        <select id="g-rotmode">
+          <option value="calendar">Calendar-locked (Day 1 = Mon, etc.)</option>
+          <option value="sequential">Sequential (picks up where it left off)</option>
+        </select>
+      </div>
+    </div>
+    <div id="anchor-section" style="display:none;">
+      <div class="anchor-box">
+        <p>Sequential mode needs an anchor to know where the rotation is. Set today's date and which day in the rotation it is.</p>
+        <div class="anchor-grid">
+          <input type="date" id="anchor-date"/>
+          <select id="anchor-day"></select>
+          <button class="anchor-set-btn" onclick="setAnchor()">Set anchor</button>
+        </div>
+        <div class="anchor-current" id="anchor-current-display"></div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-panel" id="tab-overrides">
+    <div class="info-note">Date overrides take priority over the normal rotation. Use them for assemblies, exam schedules, early releases, etc.</div>
+    <div class="esec">Override dates</div>
+    <div id="overrides-list"></div>
+    <button class="add-btn" onclick="addOverride()">+ add date override</button>
+  </div>
+  <div class="tab-panel" id="tab-noschool">
+    <div class="info-note">Mark holidays, snow days, and other no-school dates.</div>
+    <div class="esec">No-school dates</div>
+    <div id="noschool-list"></div>
+    <button class="add-btn" onclick="addNoSchool()">+ add no-school date</button>
+  </div>
+  <div class="mac">
+    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+    <button class="btn-save" onclick="saveModal()">Save</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ── SUPABASE SETUP ────────────────────────────────────────────
+const SUPABASE_URL = 'https://zatmvuxtgunoruvvofcr.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphdG12dXh0Z3Vub3J1dnZvZmNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMDIzMjksImV4cCI6MjA5MTU3ODMyOX0.gF6jtv4IyJj1C_XXt7ZmHXRr8ZcxAKk1CchsJvu76AI';
+const SCHOOL_SLUG = 'ludus';
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let schoolId = null;
+
+// ── DEFAULT DATA ──────────────────────────────────────────────
+const DEFAULT_SCHEDULE = [
+  {name:"Morning Homeroom",start:"08:00",end:"08:15",isBreak:false},
+  {name:"Period 1",start:"08:15",end:"09:10",isBreak:false},
+  {name:"Period 2",start:"09:10",end:"10:05",isBreak:false},
+  {name:"Morning Break",start:"10:05",end:"10:20",isBreak:true},
+  {name:"Period 3",start:"10:20",end:"11:15",isBreak:false},
+  {name:"Period 4",start:"11:15",end:"12:10",isBreak:false},
+  {name:"Lunch",start:"12:10",end:"13:00",isBreak:true},
+  {name:"Period 5",start:"13:00",end:"13:55",isBreak:false},
+  {name:"Period 6",start:"13:55",end:"14:50",isBreak:false},
+  {name:"Afternoon Advisory",start:"14:50",end:"15:10",isBreak:false}
+];
+const DEFAULT_EOD = {name:"School day ends", end:"15:10", show:false};
+
+let S = {
+  schoolName: 'Ludus High School',
+  rotLen: 5,
+  rotMode: 'calendar',
+  anchor: null,
+  days: [],
+  eods: [],
+  dayNames: [],
+  overrides: [],
+  noSchool: []
+};
+
+// ── SUPABASE LOAD / SAVE ──────────────────────────────────────
+async function loadFromSupabase() {
+  // Get school record
+  const { data: schoolData, error: schoolError } = await db
+    .from('schools')
+    .select('id, name')
+    .eq('slug', SCHOOL_SLUG)
+    .single();
+
+  if (schoolError || !schoolData) {
+    console.error('Could not load school:', schoolError);
+    hideLoading();
+    return;
+  }
+
+  schoolId = schoolData.id;
+
+  // Get schedule data
+  const { data: schedData, error: schedError } = await db
+    .from('schedules')
+    .select('data')
+    .eq('school_id', schoolId)
+    .single();
+
+  if (schedError) {
+    console.error('Could not load schedule:', schedError);
+    hideLoading();
+    return;
+  }
+
+  // Merge saved data into S
+  const saved = schedData.data || {};
+  S.schoolName = schoolData.name;
+  S.rotLen = saved.rotLen || 5;
+  S.rotMode = saved.rotMode || 'calendar';
+  S.anchor = saved.anchor || null;
+  S.days = saved.days || [];
+  S.eods = saved.eods || [];
+  S.dayNames = saved.dayNames || [];
+  S.overrides = saved.overrides || [];
+  S.noSchool = saved.noSchool || [];
+
+  normalizeDays();
+  hideLoading();
+  renderDisplay();
+  setTimeout(scaleRowText, 50);
+}
+
+async function saveToSupabase() {
+  if (!schoolId) return;
+
+  const payload = {
+    rotLen: S.rotLen,
+    rotMode: S.rotMode,
+    anchor: S.anchor,
+    days: S.days,
+    eods: S.eods,
+    dayNames: S.dayNames,
+    overrides: S.overrides,
+    noSchool: S.noSchool
+  };
+
+  const { error } = await db
+    .from('schedules')
+    .update({ data: payload, updated_at: new Date().toISOString() })
+    .eq('school_id', schoolId);
+
+  if (error) console.error('Save failed:', error);
+}
+
+function hideLoading() {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('display-screen').style.display = 'grid';
+}
+
+// ── NORMALIZE ─────────────────────────────────────────────────
+function normalizeDays() {
+  if (!S.days) S.days = [];
+  if (!S.eods) S.eods = [];
+  if (!S.dayNames) S.dayNames = [];
+  while (S.days.length < S.rotLen) S.days.push(JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)));
+  while (S.eods.length < S.rotLen) S.eods.push(Object.assign({}, DEFAULT_EOD));
+  while (S.dayNames.length < S.rotLen) S.dayNames.push('Day '+(S.dayNames.length+1));
+  S.days = S.days.slice(0, S.rotLen);
+  S.eods = S.eods.slice(0, S.rotLen);
+  S.dayNames = S.dayNames.slice(0, S.rotLen);
+}
+
+function getDayName(idx) {
+  return (S.dayNames && S.dayNames[idx]) ? S.dayNames[idx] : 'Day '+(idx+1);
+}
+
+// ── TIME UTILS ────────────────────────────────────────────────
+function t2m(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
+function nowM() { const n=new Date(); return n.getHours()*60+n.getMinutes()+n.getSeconds()/60; }
+function fmt(t) {
+  let [h,m]=t.split(':').map(Number);
+  const ap=h>=12?'PM':'AM';
+  if(h>12)h-=12; if(h===0)h=12;
+  return h+':'+String(m).padStart(2,'0')+' '+ap;
+}
+function dateStr(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function todayStr() { return dateStr(new Date()); }
+
+// ── ROTATION LOGIC ────────────────────────────────────────────
+function getTodayDayIndex() {
+  const today = new Date();
+  if (S.rotMode === 'calendar') {
+    const dow = today.getDay();
+    if (dow === 0 || dow === 6) return null;
+    return (dow - 1) % S.rotLen;
+  } else {
+    if (!S.anchor) return 0;
+    const anchorDate = new Date(S.anchor.date + 'T12:00:00');
+    const anchorIdx = S.anchor.dayIndex;
+    const noSchoolSet = new Set(S.noSchool.map(n => n.date));
+    let count = 0;
+    let cur = new Date(anchorDate);
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const anchorDay = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+    if (todayDate < anchorDay) {
+      cur = new Date(anchorDay);
+      cur.setDate(cur.getDate() - 1);
+      while (cur >= todayDate) {
+        const ds = dateStr(cur);
+        const dow = cur.getDay();
+        if (dow !== 0 && dow !== 6 && !noSchoolSet.has(ds)) count--;
+        cur.setDate(cur.getDate() - 1);
+      }
+    } else {
+      cur = new Date(anchorDay);
+      cur.setDate(cur.getDate() + 1);
+      while (cur <= todayDate) {
+        const ds = dateStr(cur);
+        const dow = cur.getDay();
+        if (dow !== 0 && dow !== 6 && !noSchoolSet.has(ds)) count++;
+        cur.setDate(cur.getDate() + 1);
+      }
+    }
+    return ((anchorIdx + count) % S.rotLen + S.rotLen) % S.rotLen;
+  }
+}
+
+function getOverrideForToday() {
+  const ts = todayStr();
+  return S.overrides.find(o => o.date === ts) || null;
+}
+
+function isNoSchoolToday() {
+  const ts = todayStr();
+  return S.noSchool.some(n => n.date === ts);
+}
+
+function isWeekend() {
+  const d = new Date().getDay();
+  return d === 0 || d === 6;
+}
+
+function buildList(blocks, eod) {
+  const es = blocks.length ? blocks[blocks.length-1].end : '08:00';
+  const list = [...blocks];
+  if (eod.show) list.push({name: eod.name, start: es, end: eod.end, isBreak: false, isEod: true});
+  return list;
+}
+
+function getActiveSchedule() {
+  const ov = getOverrideForToday();
+  if (ov) return { blocks: ov.blocks, eod: ov.eod, label: ov.label, isOverride: true };
+  const idx = getTodayDayIndex();
+  if (idx === null) return null;
+  return { blocks: S.days[idx], eod: S.eods[idx], label: null, isOverride: false, dayIdx: idx };
+}
+
+// ── DISPLAY RENDERING ─────────────────────────────────────────
+function renderClock(prefix) {
+  const now = new Date();
+  let h = now.getHours(); const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  const ap = h>=12?'PM':'AM'; if(h>12)h-=12; if(h===0)h=12;
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mos=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dn=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  set(prefix+'-time', h+':'+m);
+  set(prefix+'-secs', s);
+  set(prefix+'-ampm', ap);
+  set(prefix+'-date', days[now.getDay()]+', '+mos[now.getMonth()]+' '+now.getDate());
+  if (document.getElementById('d-weekday')) document.getElementById('d-weekday').textContent = dn[now.getDay()];
+}
+
+function set(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
+
+function renderDisplay() {
+  renderClock('d');
+  set('d-school', S.schoolName);
+  set('ns-school', S.schoolName);
+
+  const noSch = isNoSchoolToday();
+  const weekend = isWeekend();
+  const nsEl = document.getElementById('noschool-screen');
+  const dsEl = document.getElementById('display-screen');
+
+  if (noSch || weekend) {
+    dsEl.style.display = 'none';
+    nsEl.classList.add('visible');
+    renderClock('ns');
+    if (weekend) {
+      set('ns-title', 'No School Today');
+      set('ns-sub', 'Enjoy your weekend!');
+    } else {
+      const ns = S.noSchool.find(n => n.date === todayStr());
+      set('ns-title', ns && ns.label ? ns.label : 'No School Today');
+      set('ns-sub', 'See you next school day');
+    }
+    return;
+  }
+
+  nsEl.classList.remove('visible');
+  dsEl.style.display = 'grid';
+
+  const active = getActiveSchedule();
+  if (!active) { renderEmptyState(); return; }
+
+  const { blocks, eod, label, isOverride, dayIdx } = active;
+  const list = buildList(blocks, eod);
+
+  set('d-daybadge', isOverride ? label : getDayName(dayIdx));
+  set('d-override-label', isOverride ? label+' Schedule' : getDayName(dayIdx)+' Schedule');
+
+  renderCard(list);
+  const rebuilt = renderSchedule(list, false);
+  if (rebuilt) setTimeout(scaleRowText, 50);
+}
+
+function renderCard(list) {
+  const now = nowM();
+  let idx = -1;
+  for (let i=0;i<list.length;i++) { if(now>=t2m(list[i].start)&&now<t2m(list[i].end)){idx=i;break;} }
+  const nn=document.getElementById('d-nowname'), nt=document.getElementById('d-nowtime');
+  const pb=document.getElementById('d-progbar'), pr=document.getElementById('d-remain'), nl=document.getElementById('d-nowlabel');
+  if (idx===-1) {
+    const first=t2m(list[0].start), last=t2m(list[list.length-1].end);
+    if(now<first){nn.textContent='School not yet started';nt.textContent='Starts at '+fmt(list[0].start);nl.textContent='Upcoming';}
+    else if(now>=last){nn.textContent='School day complete';nt.textContent='See you tomorrow!';nl.textContent='End of day';}
+    else{nn.textContent='Between periods';nt.textContent='';nl.textContent='Passing time';}
+    pb.style.width='0%'; pr.textContent=''; return;
+  }
+  const p=list[idx], s=t2m(p.start), e=t2m(p.end);
+  const pct=Math.min(100,Math.round(((now-s)/(e-s))*100));
+  const rem=Math.ceil(e-now);
+  nl.textContent = p.isEod ? 'End of school day' : p.isBreak ? p.name : 'Now in session';
+  nn.textContent = p.name;
+  nt.textContent = fmt(p.start)+' \u2013 '+fmt(p.end);
+  pb.style.width = pct+'%';
+  pr.textContent = rem<=1?'< 1 min remaining':rem+' min remaining';
+}
+
+let _lastActiveIdx = -2;
+let _lastListKey = '';
+
+function listKey(list) { return list.map(p => p.start+p.end+p.name).join('|'); }
+
+function renderSchedule(list, forceRebuild) {
+  const el = document.getElementById('sched-list');
+  const now = nowM();
+  let curIdx = -1;
+  for (let i=0;i<list.length;i++) {
+    if (now>=t2m(list[i].start) && now<t2m(list[i].end)) { curIdx=i; break; }
+  }
+  const key = listKey(list);
+  if (forceRebuild || curIdx !== _lastActiveIdx || key !== _lastListKey) {
+    _lastActiveIdx = curIdx;
+    _lastListKey = key;
+    el.innerHTML = '';
+    list.forEach((p, i) => {
+      const s=t2m(p.start), e=t2m(p.end);
+      const isCur=i===curIdx, isPast=now>=e&&!isCur;
+      const d=document.createElement('div');
+      d.className='pr'+(p.isBreak?' brk':'')+(p.isEod?' eod':'')+(isCur?' current':isPast?' past':' future');
+      d.dataset.idx = i;
+      if (isCur) {
+        const pct = Math.min(100, Math.round(((now-s)/(e-s))*100));
+        d.style.setProperty('--pct', pct+'%');
+      }
+      const lock=p.isEod?'<span class="eod-tag">&#x25CF; end of day</span>':'';
+      d.innerHTML=`<div class="prt">${fmt(p.start)}</div><div class="prn">${isCur?'<span class="ndot"></span>':''}${p.name}${lock}</div><div class="pre">${fmt(p.end)}</div>`;
+      el.appendChild(d);
+    });
+    return true;
+  }
+  if (curIdx >= 0) {
+    const p = list[curIdx];
+    const s=t2m(p.start), e=t2m(p.end);
+    const pct = Math.min(100, Math.round(((now-s)/(e-s))*100));
+    const curRow = el.querySelector('.pr.current');
+    if (curRow) curRow.style.setProperty('--pct', pct+'%');
+  }
+  return false;
+}
+
+function renderEmptyState() {
+  set('d-daybadge','—');
+  set('d-nowname','No schedule configured');
+  set('d-nowtime','');
+  document.getElementById('sched-list').innerHTML='';
+}
+
+// ── MODAL ─────────────────────────────────────────────────────
+let activeTab = 'general';
+let modalDays = [];
+let modalEods = [];
+let modalDayNames = [];
+let modalOverrides = [];
+let modalNoSchool = [];
+
+function openModal() {
+  modalDays = JSON.parse(JSON.stringify(S.days));
+  modalEods = JSON.parse(JSON.stringify(S.eods));
+  modalDayNames = JSON.parse(JSON.stringify(S.dayNames));
+  modalOverrides = JSON.parse(JSON.stringify(S.overrides));
+  modalNoSchool = JSON.parse(JSON.stringify(S.noSchool));
+  document.getElementById('g-schoolname').value = S.schoolName;
+  buildRotLenSelect(S.rotLen);
+  document.getElementById('g-rotmode').value = S.rotMode;
+  toggleAnchorSection(S.rotMode);
+  buildAnchorDaySelect(S.rotLen);
+  renderAnchorCurrent();
+  buildTabs();
+  switchTab('general');
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+function buildRotLenSelect(cur) {
+  const sel = document.getElementById('g-rotlen');
+  sel.innerHTML='';
+  for (let i=2;i<=10;i++) {
+    const o=document.createElement('option');
+    o.value=i; o.textContent=i+' day'+(i>1?'s':'');
+    if(i===cur)o.selected=true;
+    sel.appendChild(o);
+  }
+}
+
+function buildAnchorDaySelect(len) {
+  const sel = document.getElementById('anchor-day');
+  sel.innerHTML='';
+  for (let i=1;i<=len;i++) {
+    const o=document.createElement('option');
+    o.value=i-1;
+    o.textContent = (modalDayNames[i-1]) ? modalDayNames[i-1] : 'Day '+i;
+    sel.appendChild(o);
+  }
+  if (S.anchor) {
+    document.getElementById('anchor-date').value = S.anchor.date;
+    document.getElementById('anchor-day').value = S.anchor.dayIndex;
+  } else {
+    document.getElementById('anchor-date').value = todayStr();
+  }
+}
+
+function toggleAnchorSection(mode) {
+  document.getElementById('anchor-section').style.display = mode==='sequential'?'block':'none';
+}
+
+document.getElementById('g-rotmode').addEventListener('change', function() { toggleAnchorSection(this.value); });
+document.getElementById('g-rotlen').addEventListener('change', function() {
+  const newLen = parseInt(this.value);
+  while (modalDays.length < newLen) modalDays.push(JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)));
+  while (modalEods.length < newLen) modalEods.push(Object.assign({}, DEFAULT_EOD));
+  while (modalDayNames.length < newLen) modalDayNames.push('Day '+(modalDayNames.length+1));
+  buildAnchorDaySelect(newLen);
+  buildTabs();
+  switchTab('general');
+});
+
+function setAnchor() {
+  const d = document.getElementById('anchor-date').value;
+  const idx = parseInt(document.getElementById('anchor-day').value);
+  if (!d) return;
+  S.anchor = {date: d, dayIndex: idx};
+  saveToSupabase();
+  renderAnchorCurrent();
+  renderDisplay();
+}
+
+function renderAnchorCurrent() {
+  const el = document.getElementById('anchor-current-display');
+  if (!el) return;
+  if (S.anchor) {
+    el.innerHTML = 'Current anchor: <span>'+S.anchor.date+'</span> = <span>Day '+(S.anchor.dayIndex+1)+'</span>';
+  } else {
+    el.innerHTML = 'No anchor set yet.';
+  }
+}
+
+function buildTabs() {
+  const bar = document.getElementById('tab-bar');
+  const rotLen = parseInt(document.getElementById('g-rotlen').value) || S.rotLen;
+  bar.innerHTML = '';
+  addTab(bar, 'general', 'General');
+  for (let i=0;i<rotLen;i++) {
+    const name = (modalDayNames[i]) ? modalDayNames[i] : 'Day '+(i+1);
+    addTab(bar, 'day-'+i, name);
+  }
+  addTab(bar, 'overrides', 'Overrides');
+  addTab(bar, 'noschool', 'No-School');
+}
+
+function addTab(bar, id, label) {
+  const btn = document.createElement('button');
+  btn.className = 'tab' + (activeTab===id?' active':'');
+  btn.textContent = label;
+  btn.dataset.tabid = id;
+  btn.onclick = () => switchTab(id);
+  bar.appendChild(btn);
+}
+
+function switchTab(id) {
+  activeTab = id;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.day-tab-panel').forEach(p => p.remove());
+  document.querySelectorAll('.tab').forEach(t => { t.classList.toggle('active', t.dataset.tabid === id); });
+  if (id === 'general') { document.getElementById('tab-general').classList.add('active'); }
+  else if (id === 'overrides') { renderOverridesTab(); document.getElementById('tab-overrides').classList.add('active'); }
+  else if (id === 'noschool') { renderNoSchoolTab(); document.getElementById('tab-noschool').classList.add('active'); }
+  else if (id.startsWith('day-')) { const idx = parseInt(id.split('-')[1]); renderDayTab(idx); }
+}
+
+function renderDayTab(idx) {
+  const panel = document.createElement('div');
+  panel.className = 'tab-panel day-tab-panel active';
+  panel.id = 'day-panel-'+idx;
+  const currentName = modalDayNames[idx] || 'Day '+(idx+1);
+  let html = '<div class="mf"><label>Day Name</label><input type="text" id="dayname-'+idx+'" value="'+currentName.replace(/"/g,'&quot;')+'" placeholder="e.g. Monday, Day A, Block 1" style="width:100%;"/></div>';
+  html += '<div class="esec">Time blocks &nbsp;<span style="font-size:.62rem;font-style:italic;color:#2a3a4a;">name / start / end</span></div>';
+  html += '<div id="dped-'+idx+'"></div>';
+  html += '<button class="add-btn" onclick="addDayBlock('+idx+')">+ add time block</button>';
+  html += '<div class="esec">End of day <span style="font-size:.62rem;font-style:italic;color:#2a4a3a;">— always follows last block</span></div>';
+  const eodChecked = modalEods[idx].show ? 'checked' : '';
+  html += '<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;"><label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;color:'+(modalEods[idx].show?'#4a8060':'#4a6080')+';cursor:pointer;"><input type="checkbox" id="eodshow-'+idx+'" '+eodChecked+' style="width:14px;height:14px;cursor:pointer;accent-color:#4a8060;"> Show end-of-day block on schedule</label></div>';
+  html += '<div class="eod-row"><input type="text" id="eodn-'+idx+'" value="'+modalEods[idx].name+'"/><input type="time" id="eode-'+idx+'" value="'+modalEods[idx].end+'"/></div>';
+  html += '<div class="eod-note" id="eodnote-'+idx+'"></div>';
+  panel.innerHTML = html;
+  document.getElementById('modal').insertBefore(panel, document.querySelector('.mac'));
+  panel.querySelector('#dayname-'+idx).addEventListener('input', function() {
+    modalDayNames[idx] = this.value.trim() || 'Day '+(idx+1);
+    buildTabs();
+    switchTab('day-'+idx);
+  });
+  buildDayBlockRows(idx);
+}
+
+function buildDayBlockRows(idx) {
+  const el = document.getElementById('dped-'+idx);
+  if (!el) return;
+  el.innerHTML = '';
+  modalDays[idx].forEach((p, i) => {
+    const r = document.createElement('div');
+    r.className = 'srow';
+    r.innerHTML = `<input type="text" value="${p.name.replace(/"/g,'&quot;')}" id="dpn-${idx}-${i}"><input type="time" value="${p.start}" id="dps-${idx}-${i}"><input type="time" value="${p.end}" id="dpe-${idx}-${i}"><button class="rmv-btn" onclick="removeDayBlock(${idx},${i})">&minus;</button>`;
+    el.appendChild(r);
+  });
+  const lastEnd = modalDays[idx].length ? modalDays[idx][modalDays[idx].length-1].end : '08:00';
+  const note = document.getElementById('eodnote-'+idx);
+  if (note) note.textContent = 'Start auto-set from last block: '+fmt(lastEnd);
+}
+
+function addDayBlock(idx) {
+  syncDayFields(idx);
+  const blocks = modalDays[idx];
+  const last = blocks.length ? blocks[blocks.length-1].end : '08:00';
+  const [lh,lm] = last.split(':').map(Number);
+  let nm = lh*60+lm+50;
+  const nh=Math.floor(nm/60)%24, nmm=nm%60;
+  blocks.push({name:'New Period', start:last, end:String(nh).padStart(2,'0')+':'+String(nmm).padStart(2,'0'), isBreak:false});
+  buildDayBlockRows(idx);
+}
+
+function removeDayBlock(idx, i) {
+  syncDayFields(idx);
+  modalDays[idx].splice(i, 1);
+  buildDayBlockRows(idx);
+}
+
+function syncDayFields(idx) {
+  const dn = document.getElementById('dayname-'+idx);
+  if (dn) modalDayNames[idx] = dn.value.trim() || 'Day '+(idx+1);
+  modalDays[idx] = modalDays[idx].map((p, i) => ({
+    name: (document.getElementById('dpn-'+idx+'-'+i)||{value:p.name}).value.trim()||p.name,
+    start: (document.getElementById('dps-'+idx+'-'+i)||{value:p.start}).value||p.start,
+    end: (document.getElementById('dpe-'+idx+'-'+i)||{value:p.end}).value||p.end,
+    isBreak: p.isBreak
+  }));
+  const en = document.getElementById('eodn-'+idx);
+  const ee = document.getElementById('eode-'+idx);
+  const es = document.getElementById('eodshow-'+idx);
+  if (en) modalEods[idx].name = en.value.trim()||modalEods[idx].name;
+  if (ee) modalEods[idx].end = ee.value||modalEods[idx].end;
+  if (es) modalEods[idx].show = es.checked;
+}
+
+function renderOverridesTab() {
+  const el = document.getElementById('overrides-list');
+  el.innerHTML = '';
+  modalOverrides.forEach((ov, i) => {
+    const r = document.createElement('div');
+    r.style.cssText = 'background:#0d1320;border:0.5px solid #1e2a3d;border-radius:8px;padding:.75rem;margin-bottom:.6rem;';
+    const rotLen = parseInt(document.getElementById('g-rotlen').value)||S.rotLen;
+    let dayOpts = '<option value="custom">Custom schedule</option>';
+    for(let d=0;d<rotLen;d++) {
+      const dn = (modalDayNames[d]) ? modalDayNames[d] : 'Day '+(d+1);
+      dayOpts+=`<option value="${d}"${ov.useDay===d?'selected':''}>Use ${dn} schedule</option>`;
+    }
+    r.innerHTML=`<div style="display:grid;grid-template-columns:110px 1fr 26px;gap:.4rem;align-items:center;margin-bottom:.5rem;">
+      <input type="date" value="${ov.date}" id="ovd-${i}" style="padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;">
+      <input type="text" value="${ov.label}" id="ovl-${i}" placeholder="Label (e.g. Assembly Day)" style="padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;">
+      <button class="rmv-btn" onclick="removeOverride(${i})">&minus;</button>
+    </div>
+    <select id="ovtype-${i}" onchange="ovTypeChange(${i})" style="width:100%;margin-bottom:.5rem;padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;">${dayOpts}</select>
+    <div id="ovcustom-${i}" style="${ov.useDay!==undefined?'display:none':''}"></div>`;
+    el.appendChild(r);
+    if (ov.useDay === undefined) buildOverrideBlocks(i);
+  });
+}
+
+function ovTypeChange(i) {
+  const val = document.getElementById('ovtype-'+i).value;
+  const cust = document.getElementById('ovcustom-'+i);
+  if (val === 'custom') {
+    cust.style.display='';
+    modalOverrides[i].useDay = undefined;
+    if (!modalOverrides[i].blocks) {
+      modalOverrides[i].blocks = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+      modalOverrides[i].eod = Object.assign({}, DEFAULT_EOD);
+    }
+    buildOverrideBlocks(i);
+  } else {
+    cust.style.display='none';
+    modalOverrides[i].useDay = parseInt(val);
+  }
+}
+
+function buildOverrideBlocks(i) {
+  const ov = modalOverrides[i];
+  const el = document.getElementById('ovcustom-'+i);
+  if (!el) return;
+  let html = '<div style="font-size:.64rem;color:#3a4a5a;letter-spacing:.08em;text-transform:uppercase;margin:.4rem 0 .3rem;">Custom blocks</div>';
+  html += '<div id="ovped-'+i+'"></div>';
+  html += `<button class="add-btn" onclick="addOverrideBlock(${i})">+ add block</button>`;
+  html += '<div style="margin-top:.4rem;display:grid;grid-template-columns:1fr 88px;gap:.35rem;"><input type="text" id="oveodn-'+i+'" value="'+ov.eod.name+'" placeholder="End of day label" style="padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:DM Mono,monospace;"><input type="time" id="oveode-'+i+'" value="'+ov.eod.end+'" style="padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:DM Mono,monospace;"></div>';
+  el.innerHTML = html;
+  buildOverridePed(i);
+}
+
+function buildOverridePed(i) {
+  const ov = modalOverrides[i];
+  const el = document.getElementById('ovped-'+i);
+  if (!el) return;
+  el.innerHTML = '';
+  ov.blocks.forEach((p, bi) => {
+    const r = document.createElement('div');
+    r.className = 'srow';
+    r.innerHTML = `<input type="text" value="${p.name.replace(/"/g,'&quot;')}" id="ovbn-${i}-${bi}"><input type="time" value="${p.start}" id="ovbs-${i}-${bi}"><input type="time" value="${p.end}" id="ovbe-${i}-${bi}"><button class="rmv-btn" onclick="removeOverrideBlock(${i},${bi})">&minus;</button>`;
+    el.appendChild(r);
+  });
+}
+
+function addOverrideBlock(i) {
+  syncOverrideFields(i);
+  const blocks = modalOverrides[i].blocks;
+  const last = blocks.length ? blocks[blocks.length-1].end : '08:00';
+  const [lh,lm]=last.split(':').map(Number); let nm=lh*60+lm+50;
+  const nh=Math.floor(nm/60)%24,nmm=nm%60;
+  blocks.push({name:'New Period',start:last,end:String(nh).padStart(2,'0')+':'+String(nmm).padStart(2,'0'),isBreak:false});
+  buildOverridePed(i);
+}
+
+function removeOverrideBlock(i, bi) {
+  syncOverrideFields(i);
+  modalOverrides[i].blocks.splice(bi,1);
+  buildOverridePed(i);
+}
+
+function syncOverrideFields(i) {
+  const ov = modalOverrides[i];
+  if (!ov.blocks) return;
+  ov.blocks = ov.blocks.map((p,bi) => ({
+    name:(document.getElementById('ovbn-'+i+'-'+bi)||{value:p.name}).value.trim()||p.name,
+    start:(document.getElementById('ovbs-'+i+'-'+bi)||{value:p.start}).value||p.start,
+    end:(document.getElementById('ovbe-'+i+'-'+bi)||{value:p.end}).value||p.end,
+    isBreak:p.isBreak
+  }));
+  const en=document.getElementById('oveodn-'+i), ee=document.getElementById('oveode-'+i);
+  if(en) ov.eod.name=en.value.trim()||ov.eod.name;
+  if(ee) ov.eod.end=ee.value||ov.eod.end;
+}
+
+function addOverride() {
+  modalOverrides.push({date:todayStr(),label:'Special Day',blocks:JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)),eod:Object.assign({},DEFAULT_EOD)});
+  renderOverridesTab();
+}
+
+function removeOverride(i) { modalOverrides.splice(i,1); renderOverridesTab(); }
+
+function renderNoSchoolTab() {
+  const el = document.getElementById('noschool-list');
+  el.innerHTML = '';
+  modalNoSchool.forEach((n,i) => {
+    const r=document.createElement('div');
+    r.className='ns-row';
+    r.innerHTML=`<input type="date" value="${n.date}" id="nsd-${i}"><input type="text" value="${n.label||''}" id="nsl-${i}" placeholder="Label (e.g. Thanksgiving)"><button class="rmv-btn" onclick="removeNoSchool(${i})">&minus;</button>`;
+    el.appendChild(r);
+  });
+}
+
+function addNoSchool() { modalNoSchool.push({date:todayStr(),label:''}); renderNoSchoolTab(); }
+function removeNoSchool(i) { modalNoSchool.splice(i,1); renderNoSchoolTab(); }
+
+async function saveModal() {
+  const rotLen = parseInt(document.getElementById('g-rotlen').value);
+  const rotMode = document.getElementById('g-rotmode').value;
+  for (let i=0;i<rotLen;i++) syncDayFields(i);
+  modalOverrides.forEach((ov,i) => {
+    const dvd=document.getElementById('ovd-'+i), dvl=document.getElementById('ovl-'+i), dvt=document.getElementById('ovtype-'+i);
+    if(dvd) ov.date=dvd.value;
+    if(dvl) ov.label=dvl.value.trim();
+    if(dvt && dvt.value!=='custom') ov.useDay=parseInt(dvt.value);
+    if(ov.useDay===undefined) syncOverrideFields(i);
+  });
+  modalNoSchool.forEach((n,i) => {
+    const d=document.getElementById('nsd-'+i), l=document.getElementById('nsl-'+i);
+    if(d)n.date=d.value; if(l)n.label=l.value.trim();
+  });
+  const finalOverrides = modalOverrides.map(ov => {
+    if (ov.useDay !== undefined) {
+      return {date:ov.date, label:ov.label, blocks:JSON.parse(JSON.stringify(modalDays[ov.useDay]||DEFAULT_SCHEDULE)), eod:Object.assign({},modalEods[ov.useDay]||DEFAULT_EOD)};
+    }
+    return ov;
+  });
+  S.schoolName = document.getElementById('g-schoolname').value.trim()||'School';
+  S.rotLen = rotLen;
+  S.rotMode = rotMode;
+  S.days = modalDays.slice(0,rotLen);
+  S.eods = modalEods.slice(0,rotLen);
+  S.dayNames = modalDayNames.slice(0,rotLen);
+  S.overrides = finalOverrides;
+  S.noSchool = modalNoSchool;
+  normalizeDays();
+  await saveToSupabase();
+  closeModal();
+  _lastActiveIdx = -2;
+  renderDisplay();
+  setTimeout(scaleRowText, 50);
+}
+
+// ── SCALE ROW TEXT ────────────────────────────────────────────
+function scaleRowText() {
+  const list = document.getElementById('sched-list');
+  if (!list) return;
+  const rows = list.querySelectorAll('.pr');
+  if (!rows.length) return;
+  const base = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const rowH = rows[0].getBoundingClientRect().height;
+  let fsPx = Math.min(Math.max(rowH * 0.35, base * 0.65), base * 1.5);
+  const firstRow = rows[0];
+  const timeEl = firstRow.querySelector('.prt');
+  if (timeEl) {
+    const colW = timeEl.offsetWidth;
+    const neededPx = fsPx * 0.62 * 8;
+    if (neededPx > colW && colW > 0) fsPx = (colW / (0.62 * 8)) * 0.9;
+    fsPx = Math.min(Math.max(fsPx, base * 0.65), base * 1.5);
+  }
+  const fs = (fsPx / base).toFixed(3) + 'rem';
+  rows.forEach(r => r.style.setProperty('--row-fs', fs));
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+loadFromSupabase();
+setInterval(() => { renderClock('d'); renderClock('ns'); }, 1000);
+setInterval(renderDisplay, 10000);
+window.addEventListener('resize', () => { _lastActiveIdx = -2; renderDisplay(); setTimeout(scaleRowText, 50); });
+window.addEventListener('orientationchange', () => { _lastActiveIdx = -2; renderDisplay(); setTimeout(scaleRowText, 100); });
+</script>
+</body>
+</html>
