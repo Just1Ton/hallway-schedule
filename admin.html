@@ -45,6 +45,20 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .btn-danger:hover{background:var(--red-bg);}
 .btn-add-school{background:var(--green-bg);border:0.5px solid var(--green-border);border-radius:8px;color:var(--green-accent);font-family:'DM Mono',monospace;font-size:.76rem;padding:.5rem 1.2rem;cursor:pointer;}
 .btn-add-school:hover{background:#0f2a0f;}
+.users-table{width:100%;border-collapse:collapse;margin-bottom:1rem;}
+.users-table th{font-size:.66rem;color:var(--text4);letter-spacing:.1em;text-transform:uppercase;text-align:left;padding:.5rem .75rem;border-bottom:0.5px solid var(--border);}
+.users-table td{font-size:.76rem;color:var(--text2);padding:.6rem .75rem;border-bottom:0.5px solid var(--border2);}
+.users-table tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;font-size:.6rem;padding:.2rem .5rem;border-radius:4px;letter-spacing:.06em;}
+.badge-super{background:#1a2d4a;color:var(--blue-accent);border:0.5px solid var(--blue-border);}
+.badge-school{background:var(--green-bg);color:var(--green-accent);border:0.5px solid var(--green-border);}
+.add-user-form{background:var(--panel2);border:0.5px solid var(--border2);border-radius:10px;padding:1.25rem;margin-top:1rem;}
+.add-user-form .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:.75rem;}
+.add-user-form input,.add-user-form select{width:100%;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:7px;color:#c8dff5;font-family:'DM Mono',monospace;font-size:.8rem;padding:.42rem .7rem;}
+.add-user-form label{display:block;font-size:.66rem;color:var(--text4);letter-spacing:.1em;margin-bottom:.28rem;text-transform:uppercase;}
+.btn-add-user{background:#1a3a6a;border:0.5px solid var(--blue-border);border-radius:8px;color:var(--blue-accent);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1.2rem;cursor:pointer;}
+.btn-add-user:hover{background:#1f4a80;}
+.btn-add-user:disabled{opacity:.5;cursor:not-allowed;}
 #modal-overlay{display:none;position:fixed;inset:0;background:rgba(5,8,18,.92);z-index:100;overflow-y:auto;padding:1.5rem;}
 #modal-overlay.open{display:block;}
 #modal{background:var(--panel);border:0.5px solid #2a3a55;border-radius:16px;padding:2rem;max-width:700px;margin:0 auto;}
@@ -88,6 +102,8 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .btn-cancel{background:transparent;border:0.5px solid var(--border);border-radius:8px;color:var(--text3);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1.2rem;cursor:pointer;}
 .success-bar{background:var(--green-bg);border:0.5px solid var(--green-border);border-radius:8px;color:var(--green-accent);font-size:.74rem;padding:.5rem .9rem;margin-bottom:1rem;display:none;}
 .success-bar.visible{display:block;}
+.error-msg{font-size:.72rem;color:var(--red-text);margin-top:.5rem;display:none;}
+.error-msg.visible{display:block;}
 </style>
 </head>
 <body>
@@ -104,14 +120,54 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
   </div>
   <div class="main">
     <div class="success-bar" id="success-bar">Changes saved successfully.</div>
+
+    <!-- SCHOOLS -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
       <div class="section-title">Schools</div>
       <button class="btn-add-school" onclick="openAddSchool()">+ Add school</button>
     </div>
     <div class="schools-grid" id="schools-grid"></div>
+
+    <!-- USERS -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;margin-top:2rem;">
+      <div class="section-title">School Admins</div>
+    </div>
+    <div style="background:var(--panel);border:0.5px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:2rem;">
+      <table class="users-table" id="users-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>School</th>
+            <th>Role</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+      <div class="add-user-form">
+        <div style="font-size:.72rem;color:var(--text4);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.75rem;">Add school admin</div>
+        <div class="row3">
+          <div>
+            <label>Email</label>
+            <input type="email" id="new-user-email" placeholder="admin@school.edu"/>
+          </div>
+          <div>
+            <label>Password</label>
+            <input type="password" id="new-user-password" placeholder="••••••••"/>
+          </div>
+          <div>
+            <label>School</label>
+            <select id="new-user-school"></select>
+          </div>
+        </div>
+        <button class="btn-add-user" id="add-user-btn" onclick="addSchoolAdmin()">Add admin</button>
+        <div class="error-msg" id="add-user-error"></div>
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- MODAL -->
 <div id="modal-overlay">
 <div id="modal">
   <h2 id="modal-title">Edit School</h2>
@@ -147,14 +203,14 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
   </div>
 
   <div class="tab-panel" id="tab-overrides">
-    <div class="info-note">Date overrides take priority over the normal rotation. Use them for assemblies, exam schedules, early releases, etc.</div>
+    <div class="info-note">Date overrides take priority over the normal rotation.</div>
     <div class="esec">Override dates</div>
     <div id="overrides-list"></div>
     <button class="add-btn" onclick="addOverride()">+ add date override</button>
   </div>
 
   <div class="tab-panel" id="tab-noschool">
-    <div class="info-note">Mark holidays and no-school dates. The display will show a no-school screen on these days.</div>
+    <div class="info-note">Mark holidays and no-school dates.</div>
     <div class="esec">No-school dates</div>
     <div id="noschool-list"></div>
     <button class="add-btn" onclick="addNoSchool()">+ add no-school date</button>
@@ -170,9 +226,11 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 <script>
 const SUPABASE_URL = 'https://zatmvuxtgunoruvvofcr.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphdG12dXh0Z3Vub3J1dnZvZmNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMDIzMjksImV4cCI6MjA5MTU3ODMyOX0.gF6jtv4IyJj1C_XXt7ZmHXRr8ZcxAKk1CchsJvu76AI';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphdG12dXh0Z3Vub3J1dnZvZmNyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjAwMjMyOSwiZXhwIjoyMDkxNTc4MzI5fQ.92vYJ6pq8o02hB8bzS41BKSBPpBcdAdgTGSxZ6MOh7Y';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const adminDb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 const DEFAULT_SCHEDULE = [
   {name:"Morning Homeroom",start:"08:00",end:"08:15",isBreak:false},
@@ -201,17 +259,14 @@ let isNewSchool = false;
 // ── AUTH ──────────────────────────────────────────────────────
 async function init() {
   try {
-    const { data: { session }, error: sessionError } = await db.auth.getSession();
-    console.log('Session:', session ? 'found' : 'none', sessionError);
+    const { data: { session } } = await db.auth.getSession();
     if (!session) { window.location.href = '/login.html'; return; }
 
-    const { data: profile, error: profileError } = await db
+    const { data: profile } = await db
       .from('user_profiles')
       .select('role')
       .eq('id', session.user.id)
       .single();
-
-    console.log('Profile:', JSON.stringify(profile), 'Error:', JSON.stringify(profileError));
 
     if (!profile || profile.role !== 'superadmin') {
       window.location.href = '/login.html';
@@ -220,6 +275,7 @@ async function init() {
 
     document.getElementById('user-email').textContent = session.user.email;
     await loadSchools();
+    await loadUsers();
     document.getElementById('loading').style.display = 'none';
     document.getElementById('app').style.display = 'block';
   } catch(e) {
@@ -234,13 +290,10 @@ async function signOut() {
 
 // ── SCHOOLS ───────────────────────────────────────────────────
 async function loadSchools() {
-  const { data, error } = await db
-    .from('schools')
-    .select('id, name, slug')
-    .order('name');
-  console.log('Schools:', JSON.stringify(data), 'Error:', JSON.stringify(error));
+  const { data } = await db.from('schools').select('id, name, slug').order('name');
   schools = data || [];
   renderSchoolCards();
+  populateSchoolSelect();
 }
 
 function renderSchoolCards() {
@@ -261,10 +314,101 @@ function renderSchoolCards() {
   });
 }
 
+function populateSchoolSelect() {
+  const sel = document.getElementById('new-user-school');
+  sel.innerHTML = '';
+  schools.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id; o.textContent = s.name;
+    sel.appendChild(o);
+  });
+}
+
 async function deleteSchool(schoolId, name) {
   if (!confirm('Delete ' + name + '? This cannot be undone.')) return;
   await db.from('schools').delete().eq('id', schoolId);
   await loadSchools();
+}
+
+// ── USERS ─────────────────────────────────────────────────────
+async function loadUsers() {
+  const { data: profiles } = await adminDb
+    .from('user_profiles')
+    .select('id, role, school_id')
+    .eq('role', 'schooladmin');
+
+  const { data: authUsers } = await adminDb.auth.admin.listUsers();
+
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = '';
+
+  if (!profiles || profiles.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:var(--text4);font-size:.72rem;">No school admins yet.</td></tr>';
+    return;
+  }
+
+  profiles.forEach(profile => {
+    const authUser = authUsers?.users?.find(u => u.id === profile.id);
+    const school = schools.find(s => s.id === profile.school_id);
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + (authUser?.email || '—') + '</td>'
+      + '<td>' + (school?.name || '—') + '</td>'
+      + '<td><span class="badge badge-school">school admin</span></td>'
+      + '<td><button class="btn-danger" onclick="removeUser(\'' + profile.id + '\')">Remove</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+
+async function addSchoolAdmin() {
+  const email = document.getElementById('new-user-email').value.trim();
+  const password = document.getElementById('new-user-password').value;
+  const schoolId = document.getElementById('new-user-school').value;
+  const btn = document.getElementById('add-user-btn');
+  const err = document.getElementById('add-user-error');
+
+  err.classList.remove('visible');
+  if (!email || !password || !schoolId) {
+    err.textContent = 'Please fill in all fields.';
+    err.classList.add('visible');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Adding...';
+
+  const { data, error } = await adminDb.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true
+  });
+
+  if (error) {
+    err.textContent = error.message;
+    err.classList.add('visible');
+    btn.disabled = false;
+    btn.textContent = 'Add admin';
+    return;
+  }
+
+  await adminDb.from('user_profiles').insert({
+    id: data.user.id,
+    role: 'schooladmin',
+    school_id: schoolId
+  });
+
+  document.getElementById('new-user-email').value = '';
+  document.getElementById('new-user-password').value = '';
+  btn.disabled = false;
+  btn.textContent = 'Add admin';
+  await loadUsers();
+  showSuccess();
+}
+
+async function removeUser(userId) {
+  if (!confirm('Remove this admin? They will no longer be able to log in.')) return;
+  await adminDb.auth.admin.deleteUser(userId);
+  await adminDb.from('user_profiles').delete().eq('id', userId);
+  await loadUsers();
 }
 
 // ── ADD / EDIT SCHOOL ─────────────────────────────────────────
@@ -280,21 +424,13 @@ async function openEditSchool(schoolId) {
   isNewSchool = false;
   currentSchoolId = schoolId;
   const school = schools.find(s => s.id === schoolId);
-  const { data: schedData } = await db
-    .from('schedules')
-    .select('data')
-    .eq('school_id', schoolId)
-    .single();
+  const { data: schedData } = await db.from('schedules').select('data').eq('school_id', schoolId).single();
   const saved = schedData?.data || {};
   currentData = {
-    rotLen: saved.rotLen || 5,
-    rotMode: saved.rotMode || 'calendar',
-    anchor: saved.anchor || null,
-    days: saved.days || [],
-    eods: saved.eods || [],
-    dayNames: saved.dayNames || [],
-    overrides: saved.overrides || [],
-    noSchool: saved.noSchool || []
+    rotLen: saved.rotLen || 5, rotMode: saved.rotMode || 'calendar',
+    anchor: saved.anchor || null, days: saved.days || [],
+    eods: saved.eods || [], dayNames: saved.dayNames || [],
+    overrides: saved.overrides || [], noSchool: saved.noSchool || []
   };
   normalizeDays();
   openModal('Edit: ' + school.name, school);
@@ -338,9 +474,7 @@ function buildTabs() {
   const rotLen = parseInt(document.getElementById('g-rotlen').value) || currentData.rotLen;
   bar.innerHTML = '';
   addTab(bar, 'general', 'General');
-  for (let i = 0; i < rotLen; i++) {
-    addTab(bar, 'day-' + i, modalDayNames[i] || 'Day ' + (i + 1));
-  }
+  for (let i = 0; i < rotLen; i++) addTab(bar, 'day-' + i, modalDayNames[i] || 'Day ' + (i + 1));
   addTab(bar, 'overrides', 'Overrides');
   addTab(bar, 'noschool', 'No-School');
 }
@@ -384,8 +518,7 @@ function renderDayTab(idx) {
   document.getElementById('modal').insertBefore(panel, document.querySelector('.mac'));
   panel.querySelector('#dayname-' + idx).addEventListener('input', function() {
     modalDayNames[idx] = this.value.trim() || 'Day ' + (idx + 1);
-    buildTabs();
-    switchTab('day-' + idx);
+    buildTabs(); switchTab('day-' + idx);
   });
   buildDayBlockRows(idx);
 }
@@ -431,9 +564,7 @@ function syncDayFields(idx) {
     end: (document.getElementById('dpe-' + idx + '-' + i) || { value: p.end }).value || p.end,
     isBreak: p.isBreak
   }));
-  const en = document.getElementById('eodn-' + idx);
-  const ee = document.getElementById('eode-' + idx);
-  const es = document.getElementById('eodshow-' + idx);
+  const en = document.getElementById('eodn-' + idx), ee = document.getElementById('eode-' + idx), es = document.getElementById('eodshow-' + idx);
   if (en) modalEods[idx].name = en.value.trim() || modalEods[idx].name;
   if (ee) modalEods[idx].end = ee.value || modalEods[idx].end;
   if (es) modalEods[idx].show = es.checked;
@@ -455,7 +586,7 @@ function renderOverridesTab() {
     }
     r.innerHTML = '<div style="display:grid;grid-template-columns:110px 1fr 26px;gap:.4rem;align-items:center;margin-bottom:.5rem;">'
       + '<input type="date" value="' + ov.date + '" id="ovd-' + i + '" style="padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:DM Mono,monospace;width:100%;">'
-      + '<input type="text" value="' + ov.label + '" id="ovl-' + i + '" placeholder="Label (e.g. Assembly Day)" style="padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:DM Mono,monospace;width:100%;">'
+      + '<input type="text" value="' + (ov.label||'') + '" id="ovl-' + i + '" placeholder="Label (e.g. Assembly Day)" style="padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:DM Mono,monospace;width:100%;">'
       + '<button class="rmv-btn" onclick="removeOverride(' + i + ')">&minus;</button>'
       + '</div>'
       + '<select id="ovtype-' + i + '" onchange="ovTypeChange(' + i + ')" style="width:100%;margin-bottom:.5rem;padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:DM Mono,monospace;">' + dayOpts + '</select>'
@@ -546,10 +677,7 @@ function addOverride() {
   renderOverridesTab();
 }
 
-function removeOverride(i) {
-  currentData.overrides.splice(i, 1);
-  renderOverridesTab();
-}
+function removeOverride(i) { currentData.overrides.splice(i, 1); renderOverridesTab(); }
 
 // ── NO SCHOOL TAB ─────────────────────────────────────────────
 function renderNoSchoolTab() {
@@ -558,7 +686,7 @@ function renderNoSchoolTab() {
   modalNoSchool.forEach((n, i) => {
     const r = document.createElement('div');
     r.className = 'ns-row';
-    r.innerHTML = '<input type="date" value="' + n.date + '" id="nsd-' + i + '"><input type="text" value="' + (n.label || '') + '" id="nsl-' + i + '" placeholder="Label (e.g. Thanksgiving)"><button class="rmv-btn" onclick="removeNoSchool(' + i + ')">&minus;</button>';
+    r.innerHTML = '<input type="date" value="' + n.date + '" id="nsd-' + i + '"><input type="text" value="' + (n.label||'') + '" id="nsl-' + i + '" placeholder="Label (e.g. Thanksgiving)"><button class="rmv-btn" onclick="removeNoSchool(' + i + ')">&minus;</button>';
     el.appendChild(r);
   });
 }
@@ -656,21 +784,14 @@ async function saveModal() {
   });
 
   const payload = {
-    rotLen, rotMode,
-    anchor: currentData.anchor,
-    days: modalDays.slice(0, rotLen),
-    eods: modalEods.slice(0, rotLen),
+    rotLen, rotMode, anchor: currentData.anchor,
+    days: modalDays.slice(0, rotLen), eods: modalEods.slice(0, rotLen),
     dayNames: modalDayNames.slice(0, rotLen),
-    overrides: finalOverrides,
-    noSchool: modalNoSchool
+    overrides: finalOverrides, noSchool: modalNoSchool
   };
 
   if (isNewSchool) {
-    const { data: newSchool, error } = await db
-      .from('schools')
-      .insert({ name: schoolName, slug })
-      .select()
-      .single();
+    const { data: newSchool, error } = await db.from('schools').insert({ name: schoolName, slug }).select().single();
     if (error) { alert('Error creating school: ' + error.message); return; }
     await db.from('schedules').insert({ school_id: newSchool.id, data: payload });
   } else {
@@ -681,12 +802,6 @@ async function saveModal() {
   closeModal();
   await loadSchools();
   showSuccess();
-}
-
-function showSuccess() {
-  const bar = document.getElementById('success-bar');
-  bar.classList.add('visible');
-  setTimeout(() => bar.classList.remove('visible'), 3000);
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
@@ -700,6 +815,12 @@ function fmt(t) {
 function todayStr() {
   const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function showSuccess() {
+  const bar = document.getElementById('success-bar');
+  bar.classList.add('visible');
+  setTimeout(() => bar.classList.remove('visible'), 3000);
 }
 
 init();
