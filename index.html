@@ -502,7 +502,7 @@ function scaleRowText() {
 loadFromSupabase();
 setInterval(() => { renderClock('d'); renderClock('ns'); }, 1000);
 setInterval(renderDisplay, 10000);
-setInterval(loadFromSupabase, 300000);
+setInterval(loadFromSupabase, 60000);
 window.addEventListener('resize', () => { _lastActiveIdx = -2; renderDisplay(); setTimeout(scaleRowText, 50); });
 window.addEventListener('orientationchange', () => { _lastActiveIdx = -2; renderDisplay(); setTimeout(scaleRowText, 100); });
 </script>
