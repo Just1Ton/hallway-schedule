@@ -381,7 +381,7 @@ function renderDisplay() {
   const active = getActiveSchedule();
   if (!active) { renderEmptyState(); return; }
 
-  const { blocks, eod, label, isOverride, dayIdx } = active;
+  const { blocks, eod, label, isOverride, isWad, dayIdx } = active;
   const list = buildList(blocks, eod);
 
   set('d-daybadge', isOverride || isWad ? label : getDayName(dayIdx));
