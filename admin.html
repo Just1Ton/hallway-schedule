@@ -16,21 +16,30 @@
   --blue-accent:#7eb8f7;--blue-mid:#4a7aad;--blue-dim:#2e4a6a;
   --green-bg:#0d1a10;--green-border:#1a3a22;--green-text:#4a8060;--green-accent:#7ec89a;
   --red-bg:#1a0a0a;--red-border:#3a1a1a;--red-text:#c05050;
+  --orange-bg:#1a0f00;--orange-border:#3a2a00;--orange-accent:#f7c87e;
   --text:#e8e4d8;--text2:#9aacbf;--text3:#6b7a99;--text4:#4a6080;
   --muted:#8a9ab5;
 }
 body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── LAYOUT ── */
 #app{display:none;}
 #loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;}
 .loading-text{font-family:'Fraunces',serif;font-size:1.5rem;color:var(--text3);font-weight:300;}
+
+/* ── TOP BAR ── */
 .topbar{background:var(--panel);border-bottom:0.5px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;}
 .topbar-title{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:300;color:#c8bfa8;}
 .topbar-right{display:flex;align-items:center;gap:1rem;}
 .user-pill{font-size:.68rem;color:var(--text4);background:var(--panel2);border:0.5px solid var(--border2);border-radius:6px;padding:.28rem .7rem;}
 .btn-signout{background:transparent;border:0.5px solid var(--border);border-radius:7px;color:var(--text3);font-family:'DM Mono',monospace;font-size:.7rem;padding:.3rem .8rem;cursor:pointer;}
 .btn-signout:hover{border-color:var(--red-border);color:var(--red-text);}
+
+/* ── MAIN CONTENT ── */
 .main{padding:2rem;max-width:900px;margin:0 auto;}
 .section-title{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:300;color:#c8bfa8;margin-bottom:1rem;}
+
+/* ── SCHOOL CARDS ── */
 .schools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-bottom:2rem;}
 .school-card{background:var(--panel);border:0.5px solid var(--border);border-radius:12px;padding:1.25rem;transition:border-color .2s;}
 .school-card:hover{border-color:var(--blue-border);}
@@ -45,6 +54,8 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .btn-danger:hover{background:var(--red-bg);}
 .btn-add-school{background:var(--green-bg);border:0.5px solid var(--green-border);border-radius:8px;color:var(--green-accent);font-family:'DM Mono',monospace;font-size:.76rem;padding:.5rem 1.2rem;cursor:pointer;}
 .btn-add-school:hover{background:#0f2a0f;}
+
+/* ── USERS TABLE ── */
 .users-table{width:100%;border-collapse:collapse;margin-bottom:1rem;}
 .users-table th{font-size:.66rem;color:var(--text4);letter-spacing:.1em;text-transform:uppercase;text-align:left;padding:.5rem .75rem;border-bottom:0.5px solid var(--border);}
 .users-table td{font-size:.76rem;color:var(--text2);padding:.6rem .75rem;border-bottom:0.5px solid var(--border2);}
@@ -59,16 +70,24 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .btn-add-user{background:#1a3a6a;border:0.5px solid var(--blue-border);border-radius:8px;color:var(--blue-accent);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1.2rem;cursor:pointer;}
 .btn-add-user:hover{background:#1f4a80;}
 .btn-add-user:disabled{opacity:.5;cursor:not-allowed;}
+
+/* ── MODAL ── */
 #modal-overlay{display:none;position:fixed;inset:0;background:rgba(5,8,18,.92);z-index:100;overflow-y:auto;padding:1.5rem;}
 #modal-overlay.open{display:block;}
 #modal{background:var(--panel);border:0.5px solid #2a3a55;border-radius:16px;padding:2rem;max-width:700px;margin:0 auto;}
 #modal h2{font-family:'Fraunces',serif;font-size:1.2rem;color:#c8bfa8;font-weight:300;margin-bottom:1.5rem;}
+
+/* ── TABS ── */
 .tab-bar{display:flex;gap:.35rem;margin-bottom:1.25rem;flex-wrap:wrap;}
 .tab{background:transparent;border:0.5px solid var(--border);border-radius:7px;color:var(--text3);font-family:'DM Mono',monospace;font-size:.72rem;padding:.32rem .75rem;cursor:pointer;letter-spacing:.04em;}
 .tab:hover{background:#1a1f2e;}
 .tab.active{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue-accent);}
+.tab.wad-tab{border-color:var(--orange-border);color:var(--orange-accent);}
+.tab.wad-tab.active{background:var(--orange-bg);border-color:var(--orange-border);color:var(--orange-accent);}
 .tab-panel{display:none;}
 .tab-panel.active{display:block;}
+
+/* ── FORM ELEMENTS ── */
 .mf{margin-bottom:.85rem;}
 .mf label{display:block;font-size:.66rem;color:var(--text4);letter-spacing:.1em;margin-bottom:.28rem;text-transform:uppercase;}
 .mf input,.mf select{background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:7px;color:#c8dff5;font-family:'DM Mono',monospace;font-size:.8rem;padding:.42rem .7rem;}
@@ -76,6 +95,8 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .mf select{width:100%;cursor:pointer;}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
 .esec{font-size:.66rem;color:#3a4a5a;letter-spacing:.1em;text-transform:uppercase;margin:1rem 0 .45rem;padding-bottom:.25rem;border-bottom:0.5px solid #1a2535;}
+
+/* ── SCHEDULE ROW EDITORS ── */
 .srow{display:grid;grid-template-columns:1fr 76px 76px 26px;gap:.35rem;align-items:center;margin-bottom:.35rem;}
 .srow input{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
 .rmv-btn{background:transparent;border:0.5px solid #3a2a2a;border-radius:5px;color:#6a3a3a;font-size:.9rem;cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -85,6 +106,8 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .eod-row{display:grid;grid-template-columns:1fr 88px;gap:.35rem;align-items:center;margin-bottom:.3rem;}
 .eod-row input{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
 .eod-note{font-size:.64rem;color:#2a5a3a;margin-top:.25rem;}
+
+/* ── ANCHOR BOX (sequential rotation) ── */
 .anchor-box{background:#0d1626;border:0.5px solid var(--blue-border);border-radius:10px;padding:1rem;margin-top:.75rem;}
 .anchor-box p{font-size:.72rem;color:var(--text3);line-height:1.6;margin-bottom:.75rem;}
 .anchor-grid{display:grid;grid-template-columns:130px 1fr auto;gap:.5rem;align-items:center;}
@@ -93,13 +116,25 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .anchor-set-btn:hover{background:#1f3a60;}
 .anchor-current{font-size:.68rem;color:var(--text3);margin-top:.6rem;}
 .anchor-current span{color:var(--blue-accent);}
+
+/* ── WEEKLY ADJUSTED DAY ── */
+.wad-block{background:#0d1320;border:0.5px solid var(--orange-border);border-radius:8px;padding:.75rem;margin-bottom:.6rem;}
+.wad-block-title{font-size:.7rem;color:var(--orange-accent);letter-spacing:.08em;margin-bottom:.6rem;}
+.btn-add-wad{background:var(--orange-bg);border:0.5px solid var(--orange-border);border-radius:7px;color:var(--orange-accent);font-family:'DM Mono',monospace;font-size:.72rem;padding:.38rem .85rem;cursor:pointer;width:100%;margin-top:.3rem;}
+.btn-add-wad:hover{background:#2a1a00;}
+
+/* ── INFO / NOTES ── */
 .info-note{font-size:.68rem;color:var(--text4);background:#0d1320;border:0.5px solid var(--border2);border-radius:7px;padding:.6rem .8rem;line-height:1.6;margin-bottom:.85rem;}
 .ns-row{display:grid;grid-template-columns:110px 1fr 26px;gap:.5rem;align-items:center;margin-bottom:.35rem;}
 .ns-row input{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
+
+/* ── MODAL ACTION BUTTONS ── */
 .mac{display:flex;gap:.65rem;margin-top:1.5rem;justify-content:flex-end;}
 .btn-save{background:#1a3a6a;border:0.5px solid var(--blue-border);border-radius:8px;color:var(--blue-accent);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1.2rem;cursor:pointer;}
 .btn-save:hover{background:#1f4a80;}
 .btn-cancel{background:transparent;border:0.5px solid var(--border);border-radius:8px;color:var(--text3);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1.2rem;cursor:pointer;}
+
+/* ── SUCCESS / ERROR MESSAGES ── */
 .success-bar{background:var(--green-bg);border:0.5px solid var(--green-border);border-radius:8px;color:var(--green-accent);font-size:.74rem;padding:.5rem .9rem;margin-bottom:1rem;display:none;}
 .success-bar.visible{display:block;}
 .error-msg{font-size:.72rem;color:var(--red-text);margin-top:.5rem;display:none;}
@@ -108,9 +143,11 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 </head>
 <body>
 
+<!-- Loading screen shown while auth and data are being fetched -->
 <div id="loading"><div class="loading-text">Loading...</div></div>
 
 <div id="app">
+  <!-- Top navigation bar -->
   <div class="topbar">
     <div class="topbar-title">Schedule Admin</div>
     <div class="topbar-right">
@@ -118,21 +155,26 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
       <button class="btn-signout" onclick="signOut()">Sign out</button>
     </div>
   </div>
+
   <div class="main">
+    <!-- Success notification bar (auto-hides after 3 seconds) -->
     <div class="success-bar" id="success-bar">Changes saved successfully.</div>
 
-    <!-- SCHOOLS -->
+    <!-- Schools section header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
       <div class="section-title">Schools</div>
       <button class="btn-add-school" onclick="openAddSchool()">+ Add school</button>
     </div>
+
+    <!-- Grid of school cards, populated dynamically -->
     <div class="schools-grid" id="schools-grid"></div>
 
-    <!-- USERS -->
+    <!-- School admins section -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;margin-top:2rem;">
       <div class="section-title">School Admins</div>
     </div>
     <div style="background:var(--panel);border:0.5px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:2rem;">
+      <!-- Users table populated dynamically -->
       <table class="users-table" id="users-table">
         <thead>
           <tr>
@@ -144,6 +186,8 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
         </thead>
         <tbody id="users-tbody"></tbody>
       </table>
+
+      <!-- Form to create a new school admin account -->
       <div class="add-user-form">
         <div style="font-size:.72rem;color:var(--text4);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.75rem;">Add school admin</div>
         <div class="row3">
@@ -167,12 +211,15 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
   </div>
 </div>
 
-<!-- MODAL -->
+<!-- ── MODAL: School schedule editor ── -->
 <div id="modal-overlay">
 <div id="modal">
   <h2 id="modal-title">Edit School</h2>
+
+  <!-- Tab bar: General, Day tabs, WAD tabs, Overrides, No-School -->
   <div class="tab-bar" id="tab-bar"></div>
 
+  <!-- General tab: school name, slug, rotation settings -->
   <div class="tab-panel" id="tab-general">
     <div class="mf"><label>School Name</label><input type="text" id="g-schoolname"/></div>
     <div class="mf"><label>URL Slug</label><input type="text" id="g-slug" placeholder="e.g. ludus"/></div>
@@ -189,9 +236,10 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
         </select>
       </div>
     </div>
+    <!-- Anchor section only shown for sequential rotation mode -->
     <div id="anchor-section" style="display:none;">
       <div class="anchor-box">
-        <p>Sequential mode needs an anchor date to know where the rotation is.</p>
+        <p>Sequential mode needs an anchor date to know where the rotation is. Set today's date and which day in the rotation it is. The display will auto-advance each school day.</p>
         <div class="anchor-grid">
           <input type="date" id="anchor-date"/>
           <select id="anchor-day"></select>
@@ -202,20 +250,31 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
     </div>
   </div>
 
+  <!-- Weekly Adjusted Days tab: recurring day-of-week schedule overrides -->
+  <div class="tab-panel" id="tab-wad">
+    <div class="info-note">Weekly Adjusted Days are recurring schedules that apply every time a specific day of the week occurs — for example, every Wednesday has a shorter schedule. The display will use this schedule instead of the normal rotation day whenever that weekday occurs.</div>
+    <div class="esec">Adjusted days</div>
+    <div id="wad-list"></div>
+    <button class="btn-add-wad" onclick="addWAD()">+ add weekly adjusted day</button>
+  </div>
+
+  <!-- Overrides tab: one-time date-specific schedule overrides -->
   <div class="tab-panel" id="tab-overrides">
-    <div class="info-note">Date overrides take priority over the normal rotation.</div>
+    <div class="info-note">Date overrides take priority over everything else. Use them for assemblies, exam schedules, early releases, etc. They apply on a specific date only.</div>
     <div class="esec">Override dates</div>
     <div id="overrides-list"></div>
     <button class="add-btn" onclick="addOverride()">+ add date override</button>
   </div>
 
+  <!-- No-School tab: dates when the school is closed -->
   <div class="tab-panel" id="tab-noschool">
-    <div class="info-note">Mark holidays and no-school dates.</div>
+    <div class="info-note">Mark holidays and no-school dates. The display will show a no-school screen on these days. Sequential rotations also skip these dates when counting forward.</div>
     <div class="esec">No-school dates</div>
     <div id="noschool-list"></div>
     <button class="add-btn" onclick="addNoSchool()">+ add no-school date</button>
   </div>
 
+  <!-- Modal action buttons -->
   <div class="mac">
     <button class="btn-cancel" onclick="closeModal()">Cancel</button>
     <button class="btn-save" onclick="saveModal()">Save</button>
@@ -224,14 +283,21 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 </div>
 
 <script>
+// ── SUPABASE CONFIGURATION ────────────────────────────────────
+// SUPABASE_ANON_KEY: safe for client-side use, respects RLS policies
+// SUPABASE_SERVICE_KEY: bypasses RLS, used only for admin auth operations
 const SUPABASE_URL = 'https://zatmvuxtgunoruvvofcr.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphdG12dXh0Z3Vub3J1dnZvZmNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMDIzMjksImV4cCI6MjA5MTU3ODMyOX0.gF6jtv4IyJj1C_XXt7ZmHXRr8ZcxAKk1CchsJvu76AI';
 const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphdG12dXh0Z3Vub3J1dnZvZmNyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjAwMjMyOSwiZXhwIjoyMDkxNTc4MzI5fQ.92vYJ6pq8o02hB8bzS41BKSBPpBcdAdgTGSxZ6MOh7Y';
 
+// db: standard client for normal operations
+// adminDb: service role client for creating/deleting auth users
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const adminDb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+// ── DEFAULT DATA ──────────────────────────────────────────────
+// Used when creating a new school or adding a new rotation day
 const DEFAULT_SCHEDULE = [
   {name:"Morning Homeroom",start:"08:00",end:"08:15",isBreak:false},
   {name:"Period 1",start:"08:15",end:"09:10",isBreak:false},
@@ -246,6 +312,16 @@ const DEFAULT_SCHEDULE = [
 ];
 const DEFAULT_EOD = {name:"School day ends", end:"15:10", show:false};
 
+// Days of week used in WAD selector
+const DAYS_OF_WEEK = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+
+// ── STATE ─────────────────────────────────────────────────────
+// schools: array of all school records loaded from Supabase
+// currentSchoolId: the school currently being edited in the modal
+// currentData: working copy of the schedule data for the school being edited
+// modal*: working copies of schedule sub-arrays used inside the modal
+// activeTab: tracks which tab is currently visible
+// isNewSchool: true when adding a new school vs editing an existing one
 let schools = [];
 let currentSchoolId = null;
 let currentData = {};
@@ -256,7 +332,9 @@ let modalNoSchool = [];
 let activeTab = 'general';
 let isNewSchool = false;
 
-// ── AUTH ──────────────────────────────────────────────────────
+// ── AUTHENTICATION ────────────────────────────────────────────
+// Checks session on page load. Redirects to login if not authenticated
+// or if the user is not a superadmin.
 async function init() {
   try {
     const { data: { session } } = await db.auth.getSession();
@@ -283,12 +361,14 @@ async function init() {
   }
 }
 
+// Signs out the current user and redirects to login
 async function signOut() {
   await db.auth.signOut();
   window.location.href = '/login.html';
 }
 
 // ── SCHOOLS ───────────────────────────────────────────────────
+// Loads all schools from Supabase and renders the school cards
 async function loadSchools() {
   const { data } = await db.from('schools').select('id, name, slug').order('name');
   schools = data || [];
@@ -296,6 +376,7 @@ async function loadSchools() {
   populateSchoolSelect();
 }
 
+// Renders a card for each school in the grid
 function renderSchoolCards() {
   const grid = document.getElementById('schools-grid');
   grid.innerHTML = '';
@@ -314,6 +395,7 @@ function renderSchoolCards() {
   });
 }
 
+// Populates the school dropdown in the add admin form
 function populateSchoolSelect() {
   const sel = document.getElementById('new-user-school');
   sel.innerHTML = '';
@@ -324,6 +406,7 @@ function populateSchoolSelect() {
   });
 }
 
+// Deletes a school and its associated schedule data
 async function deleteSchool(schoolId, name) {
   if (!confirm('Delete ' + name + '? This cannot be undone.')) return;
   await db.from('schools').delete().eq('id', schoolId);
@@ -331,6 +414,7 @@ async function deleteSchool(schoolId, name) {
 }
 
 // ── USERS ─────────────────────────────────────────────────────
+// Loads all school admin accounts and renders the users table
 async function loadUsers() {
   const { data: profiles } = await adminDb
     .from('user_profiles')
@@ -359,6 +443,7 @@ async function loadUsers() {
   });
 }
 
+// Creates a new school admin account in Supabase Auth and user_profiles
 async function addSchoolAdmin() {
   const emailEl = document.getElementById('new-user-email');
   const passwordEl = document.getElementById('new-user-password');
@@ -382,6 +467,7 @@ async function addSchoolAdmin() {
   btn.textContent = 'Adding...';
 
   try {
+    // Create the auth user with email pre-confirmed
     const { data, error } = await adminDb.auth.admin.createUser({
       email,
       password,
@@ -396,6 +482,7 @@ async function addSchoolAdmin() {
       return;
     }
 
+    // Create the user profile linking them to their school
     const { error: profileError } = await adminDb.from('user_profiles').insert({
       id: data.user.id,
       role: 'schooladmin',
@@ -425,6 +512,7 @@ async function addSchoolAdmin() {
   }
 }
 
+// Removes a school admin from both Auth and user_profiles
 async function removeUser(userId) {
   if (!confirm('Remove this admin? They will no longer be able to log in.')) return;
   await adminDb.auth.admin.deleteUser(userId);
@@ -432,40 +520,67 @@ async function removeUser(userId) {
   await loadUsers();
 }
 
-// ── ADD / EDIT SCHOOL ─────────────────────────────────────────
+// ── OPEN MODAL: ADD SCHOOL ────────────────────────────────────
+// Initializes empty state for a new school and opens the modal
 function openAddSchool() {
   isNewSchool = true;
   currentSchoolId = null;
-  currentData = { rotLen:5, rotMode:'calendar', anchor:null, days:[], eods:[], dayNames:[], overrides:[], noSchool:[] };
+  currentData = {
+    rotLen: 5, rotMode: 'calendar', anchor: null,
+    days: [], eods: [], dayNames: [],
+    wads: [],        // Weekly Adjusted Days array
+    overrides: [],
+    noSchool: []
+  };
   normalizeDays();
   openModal('Add School', null);
 }
 
+// ── OPEN MODAL: EDIT SCHOOL ───────────────────────────────────
+// Loads existing schedule data from Supabase and opens the modal
 async function openEditSchool(schoolId) {
   isNewSchool = false;
   currentSchoolId = schoolId;
   const school = schools.find(s => s.id === schoolId);
-  const { data: schedData } = await db.from('schedules').select('data').eq('school_id', schoolId).single();
+
+  const { data: schedData } = await db
+    .from('schedules')
+    .select('data')
+    .eq('school_id', schoolId)
+    .single();
+
   const saved = schedData?.data || {};
   currentData = {
-    rotLen: saved.rotLen || 5, rotMode: saved.rotMode || 'calendar',
-    anchor: saved.anchor || null, days: saved.days || [],
-    eods: saved.eods || [], dayNames: saved.dayNames || [],
-    overrides: saved.overrides || [], noSchool: saved.noSchool || []
+    rotLen: saved.rotLen || 5,
+    rotMode: saved.rotMode || 'calendar',
+    anchor: saved.anchor || null,
+    days: saved.days || [],
+    eods: saved.eods || [],
+    dayNames: saved.dayNames || [],
+    wads: saved.wads || [],          // Load existing WADs or empty array
+    overrides: saved.overrides || [],
+    noSchool: saved.noSchool || []
   };
   normalizeDays();
   openModal('Edit: ' + school.name, school);
 }
 
+// ── OPEN MODAL ────────────────────────────────────────────────
+// Sets up the modal with working copies of all data and builds tabs
 function openModal(title, school) {
   document.getElementById('modal-title').textContent = title;
   document.getElementById('g-schoolname').value = school ? school.name : '';
   document.getElementById('g-slug').value = school ? school.slug : '';
+
+  // Slug is read-only when editing an existing school
   document.getElementById('g-slug').readOnly = !isNewSchool;
+
+  // Create working copies so changes can be cancelled without affecting live data
   modalDays = JSON.parse(JSON.stringify(currentData.days));
   modalEods = JSON.parse(JSON.stringify(currentData.eods));
   modalDayNames = JSON.parse(JSON.stringify(currentData.dayNames));
   modalNoSchool = JSON.parse(JSON.stringify(currentData.noSchool));
+
   buildRotLenSelect(currentData.rotLen);
   document.getElementById('g-rotmode').value = currentData.rotMode;
   toggleAnchorSection(currentData.rotMode);
@@ -476,9 +591,13 @@ function openModal(title, school) {
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
 
-// ── NORMALIZE ─────────────────────────────────────────────────
+// ── NORMALIZE DAYS ────────────────────────────────────────────
+// Ensures the days/eods/dayNames arrays match the rotation length.
+// Pads with defaults if too short, trims if too long.
 function normalizeDays() {
   const len = currentData.rotLen;
   while (currentData.days.length < len) currentData.days.push(JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)));
@@ -490,41 +609,72 @@ function normalizeDays() {
 }
 
 // ── TABS ──────────────────────────────────────────────────────
+// Builds the tab bar dynamically based on rotation length and WADs.
+// Tab order: General | Day 1...N | WAD tabs | Overrides | No-School
 function buildTabs() {
   const bar = document.getElementById('tab-bar');
   const rotLen = parseInt(document.getElementById('g-rotlen').value) || currentData.rotLen;
   bar.innerHTML = '';
+
   addTab(bar, 'general', 'General');
-  for (let i = 0; i < rotLen; i++) addTab(bar, 'day-' + i, modalDayNames[i] || 'Day ' + (i + 1));
+
+  // One tab per rotation day
+  for (let i = 0; i < rotLen; i++) {
+    addTab(bar, 'day-' + i, modalDayNames[i] || 'Day ' + (i + 1));
+  }
+
+  // One tab per Weekly Adjusted Day, styled in orange to distinguish from rotation days
+  const wads = currentData.wads || [];
+  wads.forEach((wad, i) => {
+    addTab(bar, 'wad-' + i, wad.dayName + ' (WAD)', true);
+  });
+
   addTab(bar, 'overrides', 'Overrides');
   addTab(bar, 'noschool', 'No-School');
 }
 
-function addTab(bar, id, label) {
+// Creates and appends a single tab button
+function addTab(bar, id, label, isWad = false) {
   const btn = document.createElement('button');
-  btn.className = 'tab' + (activeTab === id ? ' active' : '');
+  btn.className = 'tab' + (activeTab === id ? ' active' : '') + (isWad ? ' wad-tab' : '');
   btn.textContent = label;
   btn.dataset.tabid = id;
   btn.onclick = () => switchTab(id);
   bar.appendChild(btn);
 }
 
+// Switches the visible tab panel and renders its content
 function switchTab(id) {
   activeTab = id;
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.day-tab-panel').forEach(p => p.remove());
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tabid === id));
-  if (id === 'general') document.getElementById('tab-general').classList.add('active');
-  else if (id === 'overrides') { renderOverridesTab(); document.getElementById('tab-overrides').classList.add('active'); }
-  else if (id === 'noschool') { renderNoSchoolTab(); document.getElementById('tab-noschool').classList.add('active'); }
-  else if (id.startsWith('day-')) renderDayTab(parseInt(id.split('-')[1]));
+
+  if (id === 'general') {
+    document.getElementById('tab-general').classList.add('active');
+  } else if (id === 'wad') {
+    renderWADTab();
+    document.getElementById('tab-wad').classList.add('active');
+  } else if (id === 'overrides') {
+    renderOverridesTab();
+    document.getElementById('tab-overrides').classList.add('active');
+  } else if (id === 'noschool') {
+    renderNoSchoolTab();
+    document.getElementById('tab-noschool').classList.add('active');
+  } else if (id.startsWith('day-')) {
+    renderDayTab(parseInt(id.split('-')[1]));
+  } else if (id.startsWith('wad-')) {
+    renderWADTab(parseInt(id.split('-')[1]));
+  }
 }
 
 // ── DAY TAB ───────────────────────────────────────────────────
+// Renders the schedule editor for a specific rotation day
 function renderDayTab(idx) {
   const panel = document.createElement('div');
   panel.className = 'tab-panel day-tab-panel active';
   panel.id = 'day-panel-' + idx;
+
   const name = modalDayNames[idx] || 'Day ' + (idx + 1);
   let html = '<div class="mf"><label>Day Name</label><input type="text" id="dayname-' + idx + '" value="' + name.replace(/"/g,'&quot;') + '" style="width:100%;"/></div>';
   html += '<div class="esec">Time blocks <span style="font-size:.62rem;font-style:italic;color:#2a3a4a;">name / start / end</span></div>';
@@ -535,15 +685,21 @@ function renderDayTab(idx) {
   html += '<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;"><label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;color:' + (modalEods[idx].show?'#4a8060':'#4a6080') + ';cursor:pointer;"><input type="checkbox" id="eodshow-' + idx + '" ' + eodChecked + ' style="width:14px;height:14px;cursor:pointer;accent-color:#4a8060;"> Show end-of-day block</label></div>';
   html += '<div class="eod-row"><input type="text" id="eodn-' + idx + '" value="' + modalEods[idx].name + '"/><input type="time" id="eode-' + idx + '" value="' + modalEods[idx].end + '"/></div>';
   html += '<div class="eod-note" id="eodnote-' + idx + '"></div>';
+
   panel.innerHTML = html;
   document.getElementById('modal').insertBefore(panel, document.querySelector('.mac'));
+
+  // Update tab label live as day name is typed
   panel.querySelector('#dayname-' + idx).addEventListener('input', function() {
     modalDayNames[idx] = this.value.trim() || 'Day ' + (idx + 1);
-    buildTabs(); switchTab('day-' + idx);
+    buildTabs();
+    switchTab('day-' + idx);
   });
+
   buildDayBlockRows(idx);
 }
 
+// Renders the time block rows for a rotation day
 function buildDayBlockRows(idx) {
   const el = document.getElementById('dped-' + idx);
   if (!el) return;
@@ -551,7 +707,10 @@ function buildDayBlockRows(idx) {
   modalDays[idx].forEach((p, i) => {
     const r = document.createElement('div');
     r.className = 'srow';
-    r.innerHTML = '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="dpn-' + idx + '-' + i + '"><input type="time" value="' + p.start + '" id="dps-' + idx + '-' + i + '"><input type="time" value="' + p.end + '" id="dpe-' + idx + '-' + i + '"><button class="rmv-btn" onclick="removeDayBlock(' + idx + ',' + i + ')">&minus;</button>';
+    r.innerHTML = '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="dpn-' + idx + '-' + i + '">'
+      + '<input type="time" value="' + p.start + '" id="dps-' + idx + '-' + i + '">'
+      + '<input type="time" value="' + p.end + '" id="dpe-' + idx + '-' + i + '">'
+      + '<button class="rmv-btn" onclick="removeDayBlock(' + idx + ',' + i + ')">&minus;</button>';
     el.appendChild(r);
   });
   const lastEnd = modalDays[idx].length ? modalDays[idx][modalDays[idx].length - 1].end : '08:00';
@@ -576,6 +735,7 @@ function removeDayBlock(idx, i) {
   buildDayBlockRows(idx);
 }
 
+// Reads current field values back into the modalDays working array
 function syncDayFields(idx) {
   const dn = document.getElementById('dayname-' + idx);
   if (dn) modalDayNames[idx] = dn.value.trim() || 'Day ' + (idx + 1);
@@ -585,13 +745,152 @@ function syncDayFields(idx) {
     end: (document.getElementById('dpe-' + idx + '-' + i) || { value: p.end }).value || p.end,
     isBreak: p.isBreak
   }));
-  const en = document.getElementById('eodn-' + idx), ee = document.getElementById('eode-' + idx), es = document.getElementById('eodshow-' + idx);
+  const en = document.getElementById('eodn-' + idx);
+  const ee = document.getElementById('eode-' + idx);
+  const es = document.getElementById('eodshow-' + idx);
   if (en) modalEods[idx].name = en.value.trim() || modalEods[idx].name;
   if (ee) modalEods[idx].end = ee.value || modalEods[idx].end;
   if (es) modalEods[idx].show = es.checked;
 }
 
+// ── WEEKLY ADJUSTED DAYS (WAD) ────────────────────────────────
+// WADs are recurring schedules tied to a day of the week.
+// Each WAD has: dayOfWeek (0=Mon...4=Fri), dayName, blocks[], eod{}
+// Priority: Date Override > WAD > Normal Rotation Day
+
+// Renders the WAD editor for a specific WAD index
+function renderWADTab(idx) {
+  // If no index provided, show the WAD list overview tab
+  if (idx === undefined) {
+    document.getElementById('tab-wad').classList.add('active');
+    renderWADList();
+    return;
+  }
+
+  const wad = currentData.wads[idx];
+  const panel = document.createElement('div');
+  panel.className = 'tab-panel day-tab-panel active';
+  panel.id = 'wad-panel-' + idx;
+
+  let html = '<div class="mf"><label>Day of Week</label><select id="waddow-' + idx + '" style="width:100%;">';
+  DAYS_OF_WEEK.forEach((d, di) => {
+    html += '<option value="' + di + '"' + (wad.dayOfWeek === di ? ' selected' : '') + '>' + d + '</option>';
+  });
+  html += '</select></div>';
+  html += '<div class="mf"><label>Label (shown on display)</label><input type="text" id="wadlabel-' + idx + '" value="' + (wad.label || '').replace(/"/g,'&quot;') + '" placeholder="e.g. Wednesday Schedule" style="width:100%;"/></div>';
+  html += '<div class="esec">Time blocks <span style="font-size:.62rem;font-style:italic;color:#2a3a4a;">name / start / end</span></div>';
+  html += '<div id="wadped-' + idx + '"></div>';
+  html += '<button class="add-btn" onclick="addWADBlock(' + idx + ')">+ add time block</button>';
+  html += '<div class="esec">End of day</div>';
+  const eodChecked = wad.eod.show ? 'checked' : '';
+  html += '<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;"><label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;color:' + (wad.eod.show?'#4a8060':'#4a6080') + ';cursor:pointer;"><input type="checkbox" id="wadeodshow-' + idx + '" ' + eodChecked + ' style="width:14px;height:14px;cursor:pointer;accent-color:#4a8060;"> Show end-of-day block</label></div>';
+  html += '<div class="eod-row"><input type="text" id="wadeodn-' + idx + '" value="' + wad.eod.name + '"/><input type="time" id="wadeode-' + idx + '" value="' + wad.eod.end + '"/></div>';
+  html += '<div style="margin-top:1rem;"><button class="btn-danger" onclick="removeWAD(' + idx + ')">Remove this Weekly Adjusted Day</button></div>';
+
+  panel.innerHTML = html;
+  document.getElementById('modal').insertBefore(panel, document.querySelector('.mac'));
+  buildWADBlockRows(idx);
+}
+
+// Renders the time block rows for a WAD
+function buildWADBlockRows(idx) {
+  const wad = currentData.wads[idx];
+  const el = document.getElementById('wadped-' + idx);
+  if (!el) return;
+  el.innerHTML = '';
+  wad.blocks.forEach((p, bi) => {
+    const r = document.createElement('div');
+    r.className = 'srow';
+    r.innerHTML = '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="wadbn-' + idx + '-' + bi + '">'
+      + '<input type="time" value="' + p.start + '" id="wadbs-' + idx + '-' + bi + '">'
+      + '<input type="time" value="' + p.end + '" id="wadbe-' + idx + '-' + bi + '">'
+      + '<button class="rmv-btn" onclick="removeWADBlock(' + idx + ',' + bi + ')">&minus;</button>';
+    el.appendChild(r);
+  });
+}
+
+// Adds a new time block to a WAD
+function addWADBlock(idx) {
+  syncWADFields(idx);
+  const blocks = currentData.wads[idx].blocks;
+  const last = blocks.length ? blocks[blocks.length - 1].end : '08:00';
+  const [lh, lm] = last.split(':').map(Number);
+  let nm = lh * 60 + lm + 50;
+  const nh = Math.floor(nm / 60) % 24, nmm = nm % 60;
+  blocks.push({ name: 'New Period', start: last, end: String(nh).padStart(2,'0') + ':' + String(nmm).padStart(2,'0'), isBreak: false });
+  buildWADBlockRows(idx);
+}
+
+// Removes a time block from a WAD
+function removeWADBlock(idx, bi) {
+  syncWADFields(idx);
+  currentData.wads[idx].blocks.splice(bi, 1);
+  buildWADBlockRows(idx);
+}
+
+// Reads current WAD field values back into currentData.wads
+function syncWADFields(idx) {
+  const wad = currentData.wads[idx];
+  const dow = document.getElementById('waddow-' + idx);
+  const lbl = document.getElementById('wadlabel-' + idx);
+  if (dow) { wad.dayOfWeek = parseInt(dow.value); wad.dayName = DAYS_OF_WEEK[wad.dayOfWeek]; }
+  if (lbl) wad.label = lbl.value.trim();
+  wad.blocks = wad.blocks.map((p, bi) => ({
+    name: (document.getElementById('wadbn-' + idx + '-' + bi) || { value: p.name }).value.trim() || p.name,
+    start: (document.getElementById('wadbs-' + idx + '-' + bi) || { value: p.start }).value || p.start,
+    end: (document.getElementById('wadbe-' + idx + '-' + bi) || { value: p.end }).value || p.end,
+    isBreak: p.isBreak
+  }));
+  const en = document.getElementById('wadeodn-' + idx);
+  const ee = document.getElementById('wadeode-' + idx);
+  const es = document.getElementById('wadeodshow-' + idx);
+  if (en) wad.eod.name = en.value.trim() || wad.eod.name;
+  if (ee) wad.eod.end = ee.value || wad.eod.end;
+  if (es) wad.eod.show = es.checked;
+}
+
+// Adds a new Weekly Adjusted Day with default schedule and opens its tab
+function addWAD() {
+  if (!currentData.wads) currentData.wads = [];
+  currentData.wads.push({
+    dayOfWeek: 0,          // 0=Monday by default
+    dayName: 'Monday',
+    label: 'Monday Schedule',
+    blocks: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)),
+    eod: Object.assign({}, DEFAULT_EOD)
+  });
+  buildTabs();
+  switchTab('wad-' + (currentData.wads.length - 1));
+}
+
+// Removes a WAD and refreshes tabs
+function removeWAD(idx) {
+  if (!confirm('Remove this Weekly Adjusted Day?')) return;
+  currentData.wads.splice(idx, 1);
+  buildTabs();
+  switchTab('general');
+}
+
+// Renders the WAD overview list (shown when clicking the WAD tab directly)
+function renderWADList() {
+  const el = document.getElementById('wad-list');
+  el.innerHTML = '';
+  const wads = currentData.wads || [];
+  if (wads.length === 0) {
+    el.innerHTML = '<div style="font-size:.74rem;color:var(--text4);padding:.5rem 0;">No weekly adjusted days configured.</div>';
+    return;
+  }
+  wads.forEach((wad, i) => {
+    const r = document.createElement('div');
+    r.className = 'wad-block';
+    r.innerHTML = '<div class="wad-block-title">' + wad.dayName + ' — ' + (wad.label || 'Weekly Adjusted Day') + '</div>'
+      + '<div style="font-size:.7rem;color:var(--text3);">' + wad.blocks.length + ' time blocks</div>';
+    el.appendChild(r);
+  });
+}
+
 // ── OVERRIDES TAB ─────────────────────────────────────────────
+// Renders the list of one-time date overrides
 function renderOverridesTab() {
   const el = document.getElementById('overrides-list');
   el.innerHTML = '';
@@ -600,11 +899,14 @@ function renderOverridesTab() {
     const r = document.createElement('div');
     r.style.cssText = 'background:#0d1320;border:0.5px solid #1e2a3d;border-radius:8px;padding:.75rem;margin-bottom:.6rem;';
     const rotLen = parseInt(document.getElementById('g-rotlen').value) || currentData.rotLen;
+
+    // Dropdown allows using an existing rotation day or defining a custom schedule
     let dayOpts = '<option value="custom">Custom schedule</option>';
     for (let d = 0; d < rotLen; d++) {
       const dn = modalDayNames[d] || 'Day ' + (d + 1);
       dayOpts += '<option value="' + d + '"' + (ov.useDay === d ? ' selected' : '') + '>Use ' + dn + ' schedule</option>';
     }
+
     r.innerHTML = '<div style="display:grid;grid-template-columns:110px 1fr 26px;gap:.4rem;align-items:center;margin-bottom:.5rem;">'
       + '<input type="date" value="' + ov.date + '" id="ovd-' + i + '" style="padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:DM Mono,monospace;width:100%;">'
       + '<input type="text" value="' + (ov.label||'') + '" id="ovl-' + i + '" placeholder="Label (e.g. Assembly Day)" style="padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:DM Mono,monospace;width:100%;">'
@@ -617,6 +919,7 @@ function renderOverridesTab() {
   });
 }
 
+// Toggles between using an existing rotation day vs a custom schedule for an override
 function ovTypeChange(i) {
   const val = document.getElementById('ovtype-' + i).value;
   const cust = document.getElementById('ovcustom-' + i);
@@ -634,6 +937,7 @@ function ovTypeChange(i) {
   }
 }
 
+// Renders the custom block editor for an override
 function buildOverrideBlocks(i) {
   const ov = currentData.overrides[i];
   const el = document.getElementById('ovcustom-' + i);
@@ -656,7 +960,10 @@ function buildOverridePed(i) {
   ov.blocks.forEach((p, bi) => {
     const r = document.createElement('div');
     r.className = 'srow';
-    r.innerHTML = '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="ovbn-' + i + '-' + bi + '"><input type="time" value="' + p.start + '" id="ovbs-' + i + '-' + bi + '"><input type="time" value="' + p.end + '" id="ovbe-' + i + '-' + bi + '"><button class="rmv-btn" onclick="removeOverrideBlock(' + i + ',' + bi + ')">&minus;</button>';
+    r.innerHTML = '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="ovbn-' + i + '-' + bi + '">'
+      + '<input type="time" value="' + p.start + '" id="ovbs-' + i + '-' + bi + '">'
+      + '<input type="time" value="' + p.end + '" id="ovbe-' + i + '-' + bi + '">'
+      + '<button class="rmv-btn" onclick="removeOverrideBlock(' + i + ',' + bi + ')">&minus;</button>';
     el.appendChild(r);
   });
 }
@@ -678,6 +985,7 @@ function removeOverrideBlock(i, bi) {
   buildOverridePed(i);
 }
 
+// Reads override field values back into currentData.overrides
 function syncOverrideFields(i) {
   const ov = currentData.overrides[i];
   if (!ov.blocks) return;
@@ -694,20 +1002,28 @@ function syncOverrideFields(i) {
 
 function addOverride() {
   if (!currentData.overrides) currentData.overrides = [];
-  currentData.overrides.push({ date: todayStr(), label: 'Special Day', blocks: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)), eod: Object.assign({}, DEFAULT_EOD) });
+  currentData.overrides.push({
+    date: todayStr(),
+    label: 'Special Day',
+    blocks: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)),
+    eod: Object.assign({}, DEFAULT_EOD)
+  });
   renderOverridesTab();
 }
 
 function removeOverride(i) { currentData.overrides.splice(i, 1); renderOverridesTab(); }
 
 // ── NO SCHOOL TAB ─────────────────────────────────────────────
+// Renders the list of no-school dates
 function renderNoSchoolTab() {
   const el = document.getElementById('noschool-list');
   el.innerHTML = '';
   modalNoSchool.forEach((n, i) => {
     const r = document.createElement('div');
     r.className = 'ns-row';
-    r.innerHTML = '<input type="date" value="' + n.date + '" id="nsd-' + i + '"><input type="text" value="' + (n.label||'') + '" id="nsl-' + i + '" placeholder="Label (e.g. Thanksgiving)"><button class="rmv-btn" onclick="removeNoSchool(' + i + ')">&minus;</button>';
+    r.innerHTML = '<input type="date" value="' + n.date + '" id="nsd-' + i + '">'
+      + '<input type="text" value="' + (n.label||'') + '" id="nsl-' + i + '" placeholder="Label (e.g. Thanksgiving)">'
+      + '<button class="rmv-btn" onclick="removeNoSchool(' + i + ')">&minus;</button>';
     el.appendChild(r);
   });
 }
@@ -716,6 +1032,7 @@ function addNoSchool() { modalNoSchool.push({ date: todayStr(), label: '' }); re
 function removeNoSchool(i) { modalNoSchool.splice(i, 1); renderNoSchoolTab(); }
 
 // ── ROTATION / ANCHOR ─────────────────────────────────────────
+// Builds the rotation length dropdown (2–10 days)
 function buildRotLenSelect(cur) {
   const sel = document.getElementById('g-rotlen');
   sel.innerHTML = '';
@@ -727,6 +1044,7 @@ function buildRotLenSelect(cur) {
   }
 }
 
+// Builds the anchor day dropdown used in sequential rotation mode
 function buildAnchorDaySelect(len) {
   const sel = document.getElementById('anchor-day');
   sel.innerHTML = '';
@@ -744,11 +1062,17 @@ function buildAnchorDaySelect(len) {
   }
 }
 
+// Shows or hides the anchor section based on rotation mode
 function toggleAnchorSection(mode) {
   document.getElementById('anchor-section').style.display = mode === 'sequential' ? 'block' : 'none';
 }
 
-document.getElementById('g-rotmode').addEventListener('change', function() { toggleAnchorSection(this.value); });
+// Listen for rotation mode changes to show/hide anchor section
+document.getElementById('g-rotmode').addEventListener('change', function() {
+  toggleAnchorSection(this.value);
+});
+
+// Listen for rotation length changes to rebuild day tabs and anchor selector
 document.getElementById('g-rotlen').addEventListener('change', function() {
   const newLen = parseInt(this.value);
   while (modalDays.length < newLen) modalDays.push(JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)));
@@ -759,6 +1083,7 @@ document.getElementById('g-rotlen').addEventListener('change', function() {
   switchTab('general');
 });
 
+// Saves the anchor date and day index for sequential rotation
 function setAnchor() {
   const d = document.getElementById('anchor-date').value;
   const idx = parseInt(document.getElementById('anchor-day').value);
@@ -767,6 +1092,7 @@ function setAnchor() {
   renderAnchorCurrent();
 }
 
+// Displays the currently saved anchor date in the UI
 function renderAnchorCurrent() {
   const el = document.getElementById('anchor-current-display');
   if (!el) return;
@@ -775,15 +1101,21 @@ function renderAnchorCurrent() {
     : 'No anchor set yet.';
 }
 
-// ── SAVE ──────────────────────────────────────────────────────
+// ── SAVE MODAL ────────────────────────────────────────────────
+// Syncs all field values, builds the final payload, and saves to Supabase
 async function saveModal() {
   const rotLen = parseInt(document.getElementById('g-rotlen').value);
   const rotMode = document.getElementById('g-rotmode').value;
   const schoolName = document.getElementById('g-schoolname').value.trim();
   const slug = document.getElementById('g-slug').value.trim().toLowerCase().replace(/\s+/g, '-');
 
+  // Sync all rotation day fields
   for (let i = 0; i < rotLen; i++) syncDayFields(i);
 
+  // Sync all WAD fields
+  (currentData.wads || []).forEach((wad, i) => syncWADFields(i));
+
+  // Sync override date/label fields
   (currentData.overrides || []).forEach((ov, i) => {
     const dvd = document.getElementById('ovd-' + i), dvl = document.getElementById('ovl-' + i), dvt = document.getElementById('ovtype-' + i);
     if (dvd) ov.date = dvd.value;
@@ -792,30 +1124,47 @@ async function saveModal() {
     if (ov.useDay === undefined) syncOverrideFields(i);
   });
 
+  // Sync no-school date/label fields
   modalNoSchool.forEach((n, i) => {
     const d = document.getElementById('nsd-' + i), l = document.getElementById('nsl-' + i);
     if (d) n.date = d.value; if (l) n.label = l.value.trim();
   });
 
+  // Expand any overrides that reference a rotation day into full block copies
   const finalOverrides = (currentData.overrides || []).map(ov => {
     if (ov.useDay !== undefined) {
-      return { date: ov.date, label: ov.label, blocks: JSON.parse(JSON.stringify(modalDays[ov.useDay] || DEFAULT_SCHEDULE)), eod: Object.assign({}, modalEods[ov.useDay] || DEFAULT_EOD) };
+      return {
+        date: ov.date, label: ov.label,
+        blocks: JSON.parse(JSON.stringify(modalDays[ov.useDay] || DEFAULT_SCHEDULE)),
+        eod: Object.assign({}, modalEods[ov.useDay] || DEFAULT_EOD)
+      };
     }
     return ov;
   });
 
+  // Build final data payload to store in Supabase
   const payload = {
-    rotLen, rotMode, anchor: currentData.anchor,
-    days: modalDays.slice(0, rotLen), eods: modalEods.slice(0, rotLen),
+    rotLen, rotMode,
+    anchor: currentData.anchor,
+    days: modalDays.slice(0, rotLen),
+    eods: modalEods.slice(0, rotLen),
     dayNames: modalDayNames.slice(0, rotLen),
-    overrides: finalOverrides, noSchool: modalNoSchool
+    wads: currentData.wads || [],    // Save WADs to database
+    overrides: finalOverrides,
+    noSchool: modalNoSchool
   };
 
   if (isNewSchool) {
-    const { data: newSchool, error } = await db.from('schools').insert({ name: schoolName, slug }).select().single();
+    // Insert new school and its schedule
+    const { data: newSchool, error } = await db
+      .from('schools')
+      .insert({ name: schoolName, slug })
+      .select()
+      .single();
     if (error) { alert('Error creating school: ' + error.message); return; }
     await db.from('schedules').insert({ school_id: newSchool.id, data: payload });
   } else {
+    // Update existing school name and schedule data
     await db.from('schools').update({ name: schoolName }).eq('id', currentSchoolId);
     await db.from('schedules').update({ data: payload, updated_at: new Date().toISOString() }).eq('school_id', currentSchoolId);
   }
@@ -825,7 +1174,8 @@ async function saveModal() {
   showSuccess();
 }
 
-// ── UTILS ─────────────────────────────────────────────────────
+// ── UTILITIES ─────────────────────────────────────────────────
+// Formats a 24h time string (HH:MM) into 12h display format
 function fmt(t) {
   let [h, m] = t.split(':').map(Number);
   const ap = h >= 12 ? 'PM' : 'AM';
@@ -833,17 +1183,20 @@ function fmt(t) {
   return h + ':' + String(m).padStart(2, '0') + ' ' + ap;
 }
 
+// Returns today's date as YYYY-MM-DD string
 function todayStr() {
   const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
+// Shows the success bar briefly then hides it
 function showSuccess() {
   const bar = document.getElementById('success-bar');
   bar.classList.add('visible');
   setTimeout(() => bar.classList.remove('visible'), 3000);
 }
 
+// ── START ─────────────────────────────────────────────────────
 init();
 </script>
 </body>
