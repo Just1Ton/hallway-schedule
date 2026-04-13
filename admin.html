@@ -691,10 +691,25 @@ function renderDayTab(idx) {
   document.getElementById('modal').insertBefore(panel, document.querySelector('.mac'));
 
   // Update tab label live as day name is typed
+  // Uses debounce so the tab only rebuilds 500ms after the user stops typing,
+  // preventing focus loss on every keystroke
+  let dayNameTimer = null;
   panel.querySelector('#dayname-' + idx).addEventListener('input', function() {
     modalDayNames[idx] = this.value.trim() || 'Day ' + (idx + 1);
-    buildTabs();
-    switchTab('day-' + idx);
+    clearTimeout(dayNameTimer);
+    dayNameTimer = setTimeout(() => {
+      const activeEl = document.activeElement;
+      buildTabs();
+      switchTab('day-' + idx);
+      // Restore focus to the name field after tab rebuild
+      const nameField = document.getElementById('dayname-' + idx);
+      if (nameField) {
+        nameField.focus();
+        // Move cursor to end of text
+        const len = nameField.value.length;
+        nameField.setSelectionRange(len, len);
+      }
+    }, 500);
   });
 
   buildDayBlockRows(idx);
