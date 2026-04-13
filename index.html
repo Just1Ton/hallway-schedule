@@ -510,12 +510,38 @@ function renderCard(list) {
   const pb=document.getElementById('d-progbar'), pr=document.getElementById('d-remain'), nl=document.getElementById('d-nowlabel');
 
   if (idx===-1) {
-    // No active period — show before/after school or passing time message
+    // No active period — show before/after school or passing time countdown
     const first=t2m(list[0].start), last=t2m(list[list.length-1].end);
-    if(now<first){nn.textContent='School not yet started';nt.textContent='Starts at '+fmt(list[0].start);nl.textContent='Upcoming';}
-    else if(now>=last){nn.textContent='School day complete';nt.textContent='See you tomorrow!';nl.textContent='End of day';}
-    else{nn.textContent='Between periods';nt.textContent='';nl.textContent='Passing time';}
-    pb.style.width='0%'; pr.textContent=''; return;
+    if(now<first){
+      // Before school starts
+      nn.textContent='School not yet started';
+      nt.textContent='Starts at '+fmt(list[0].start);
+      nl.textContent='Upcoming';
+      pb.style.width='0%'; pr.textContent='';
+    } else if(now>=last){
+      // After school ends
+      nn.textContent='School day complete';
+      nt.textContent='See you tomorrow!';
+      nl.textContent='End of day';
+      pb.style.width='0%'; pr.textContent='';
+    } else {
+      // Between periods — find the next period and show countdown
+      const next = list.find(p => t2m(p.start) > now);
+      if (next) {
+        const prevEnd = list.filter(p => t2m(p.end) <= now).pop();
+        const gapStart = prevEnd ? t2m(prevEnd.end) : now;
+        const gapEnd = t2m(next.start);
+        const gapTotal = gapEnd - gapStart;
+        const gapRemain = Math.ceil(gapEnd - now);
+        const pct = gapTotal > 0 ? Math.min(100, Math.round(((now - gapStart) / gapTotal) * 100)) : 0;
+        nl.textContent = 'Passing time';
+        nn.textContent = next.name + ' starts soon';
+        nt.textContent = 'Begins at ' + fmt(next.start);
+        pb.style.width = pct + '%';
+        pr.textContent = gapRemain <= 1 ? '< 1 min' : gapRemain + ' min until next class';
+      }
+    }
+    return;
   }
 
   // Active period found — show name, times, progress, and remaining time
