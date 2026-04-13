@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+/* ── RESET & ROOT VARIABLES ── */
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
   --bg:#0a0e1a;--panel:#111827;--panel2:#0d1320;
@@ -20,7 +21,12 @@
 }
 body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 
+/* ── MAIN DISPLAY SCREEN ──
+   Two-column grid: left panel (clock + current period) | right (schedule list)
+   Switches to single column in portrait/narrow layout via media query below */
 #display-screen{padding:1.5rem;display:grid;grid-template-columns:33vw 1fr;grid-template-rows:auto 1fr;gap:1.25rem;min-height:100vh;}
+
+/* ── LEFT PANEL: clock, school name, current period card ── */
 #left-panel{grid-column:1;grid-row:1/3;display:flex;flex-direction:column;justify-content:space-between;background:var(--panel);border:0.5px solid var(--border);border-radius:16px;padding:2rem 1.75rem;}
 .school-name{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:300;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
 .clock-wrap{margin:.75rem 0;}
@@ -30,7 +36,11 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .clock-seconds{font-size:clamp(1.5rem, 6.5vw, 4.8rem);color:#4a6a8a;font-weight:300;white-space:nowrap;display:inline-block;width:2ch;font-variant-numeric:tabular-nums;}
 .clock-ampm{font-size:1.8rem;color:var(--blue-mid);}
 .clock-date{font-size:1rem;color:var(--text3);margin-top:.4rem;}
+
+/* ── DAY BADGE: shows rotation day name or WAD label ── */
 .day-badge{display:inline-block;background:var(--blue-bg);border:0.5px solid var(--blue-border);border-radius:8px;padding:.45rem 1rem;font-size:.9rem;color:var(--blue-accent);letter-spacing:.08em;margin-bottom:.9rem;}
+
+/* ── NOW CARD: current period with progress bar ── */
 .now-card{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:12px;padding:1.25rem;}
 .now-label{font-size:.75rem;color:var(--blue-mid);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.45rem;}
 .now-name{font-family:'Fraunces',serif;font-size:1.5rem;color:var(--blue-accent);font-weight:700;}
@@ -38,11 +48,17 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .prog-wrap{background:#0d1626;border-radius:3px;height:6px;margin-top:.75rem;overflow:hidden;}
 .prog-bar{height:100%;background:var(--blue-border);border-radius:3px;transition:width 1s linear;}
 .prog-remain{font-size:.78rem;color:var(--blue-mid);margin-top:.35rem;text-align:right;}
+
+/* ── RIGHT PANEL: header row and schedule list ── */
 #right-top{grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:space-between;}
 .header-title{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:300;color:#c8bfa8;}
 .header-right{display:flex;align-items:center;gap:.75rem;}
 .day-pill{font-size:.65rem;color:#4a5568;letter-spacing:.1em;text-transform:uppercase;background:#1a1f2e;border:0.5px solid var(--border);border-radius:5px;padding:.28rem .7rem;}
 #sched-list{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:.3rem;overflow-y:auto;}
+
+/* ── SCHEDULE ROW STYLES ──
+   Each row (.pr) can be: past, future, current, eod (end of day), or brk (break)
+   Current row uses a CSS gradient that updates via --pct custom property */
 .pr{display:grid;grid-template-columns:minmax(0,8rem) 1fr minmax(0,6rem);align-items:center;gap:.5rem;padding:.55rem .9rem;border-radius:10px;border:0.5px solid transparent;position:relative;flex:1;min-height:2.5rem;max-height:8rem;overflow:hidden;}
 .pr.past{opacity:.28;}
 .pr.future{background:var(--panel);border-color:var(--border2);}
@@ -62,9 +78,13 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .brk .prn{font-style:italic;color:#3a4a5a;}
 .brk.current .prn{color:#5a7a9a;}
 .eod-tag{font-size:.56rem;color:#2a4a3a;margin-left:4px;}
+
+/* ── ANIMATED DOT: shown on currently active period ── */
 .ndot{display:inline-block;width:5px;height:5px;background:var(--blue-accent);border-radius:50%;margin-right:5px;vertical-align:middle;animation:pulse 2s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.2;}}
 
+/* ── NO SCHOOL SCREEN ──
+   Shown on weekends and configured no-school dates */
 #noschool-screen{display:none;padding:1.5rem;min-height:100vh;}
 #noschool-screen.visible{display:flex;flex-direction:column;}
 .noschool-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--panel);border:0.5px solid var(--border);border-radius:16px;position:relative;overflow:hidden;gap:.5rem;}
@@ -75,13 +95,9 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .noschool-icon{font-size:3rem;margin-bottom:.5rem;opacity:.4;}
 .noschool-title{font-family:'Fraunces',serif;font-size:3rem;font-weight:700;color:#c8bfa8;margin-bottom:.25rem;}
 .noschool-sub{font-size:.9rem;color:var(--text3);}
-@keyframes breathe{0%,100%{transform:scaleY(1);}50%{transform:scaleY(1.04);}}
-#cat-body{animation:breathe 3.5s ease-in-out infinite;transform-origin:center bottom;}
-@keyframes zzz{0%{opacity:0;transform:translate(0,0) scale(.7);}40%{opacity:1;}100%{opacity:0;transform:translate(12px,-18px) scale(1.1);}}
-.zz1{animation:zzz 2.4s ease-in-out infinite;}
-.zz2{animation:zzz 2.4s ease-in-out .8s infinite;}
-.zz3{animation:zzz 2.4s ease-in-out 1.6s infinite;}
 
+/* ── PORTRAIT / NARROW LAYOUT ──
+   Switches to single-column stacked layout on portrait screens */
 @media (max-aspect-ratio: 1/1) {
   #display-screen{grid-template-columns:1fr;grid-template-rows:auto auto 1fr;min-height:100vh;padding:1.5vw;gap:1.5vw;}
   #left-panel{grid-column:1;grid-row:1;flex-direction:row;align-items:stretch;justify-content:space-between;gap:2vw;padding:2.5vw 3vw;}
@@ -103,8 +119,11 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
   #sched-list{grid-column:1;grid-row:3;}
 }
 
+/* ── LOADING SCREEN: shown while Supabase data is being fetched ── */
 #loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200;}
 .loading-text{font-family:'Fraunces',serif;font-size:1.5rem;color:var(--text3);font-weight:300;}
+
+/* ── ERROR SCREEN: shown when school slug is not found in database ── */
 #error-screen{display:none;position:fixed;inset:0;background:var(--bg);align-items:center;justify-content:center;z-index:200;flex-direction:column;gap:1rem;}
 #error-screen.visible{display:flex;}
 .error-title{font-family:'Fraunces',serif;font-size:2rem;color:#c05050;font-weight:300;}
@@ -113,23 +132,36 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 </head>
 <body>
 
+<!-- Loading screen shown while data is fetched from Supabase -->
 <div id="loading-screen"><div class="loading-text">Loading...</div></div>
+
+<!-- Error screen shown if the school slug in the URL is not found -->
 <div id="error-screen">
   <div class="error-title">School not found</div>
   <div class="error-sub" id="error-sub">Check the URL and try again.</div>
 </div>
 
+<!-- Main display screen, hidden until data loads successfully -->
 <div id="display-screen" style="display:none;">
   <div id="left-panel">
     <div class="left-clock-block">
+      <!-- School name pulled from Supabase -->
       <div class="school-name" id="d-school">School</div>
       <div class="clock-wrap">
-        <div class="clock-time"><span class="clock-hm" id="d-time">--:--</span><div class="clock-seconds-row"><span class="clock-seconds" id="d-secs">00</span><span class="clock-ampm" id="d-ampm"></span></div></div>
+        <div class="clock-time">
+          <span class="clock-hm" id="d-time">--:--</span>
+          <div class="clock-seconds-row">
+            <span class="clock-seconds" id="d-secs">00</span>
+            <span class="clock-ampm" id="d-ampm"></span>
+          </div>
+        </div>
         <div class="clock-date" id="d-date"></div>
       </div>
     </div>
     <div>
+      <!-- Shows rotation day name, WAD label, or override label -->
       <div class="day-badge" id="d-daybadge">Day 1</div>
+      <!-- Current period card: name, time range, progress bar -->
       <div class="now-card">
         <div class="now-label" id="d-nowlabel">Now in session</div>
         <div class="now-name" id="d-nowname">—</div>
@@ -139,18 +171,29 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
       </div>
     </div>
   </div>
+
+  <!-- Right panel header: schedule title and day of week pill -->
   <div id="right-top">
     <div class="header-title" id="d-override-label">Today's Schedule</div>
     <div class="header-right"><div class="day-pill" id="d-weekday"></div></div>
   </div>
+
+  <!-- Schedule list: populated dynamically by renderSchedule() -->
   <div id="sched-list"></div>
 </div>
 
+<!-- No school screen: shown on weekends and configured no-school dates -->
 <div id="noschool-screen">
   <div class="noschool-main">
     <div class="noschool-clock">
       <div class="school-name" id="ns-school" style="text-align:center;margin-bottom:.5rem;"></div>
-      <div class="clock-time"><span class="clock-hm" id="ns-time">--:--</span><div class="clock-seconds-row"><span class="clock-seconds" id="ns-secs">00</span><span class="clock-ampm" id="ns-ampm"></span></div></div>
+      <div class="clock-time">
+        <span class="clock-hm" id="ns-time">--:--</span>
+        <div class="clock-seconds-row">
+          <span class="clock-seconds" id="ns-secs">00</span>
+          <span class="clock-ampm" id="ns-ampm"></span>
+        </div>
+      </div>
       <div class="clock-date" id="ns-date"></div>
     </div>
     <div class="noschool-divider"></div>
@@ -161,22 +204,37 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 </div>
 
 <script>
+// ── SUPABASE CONFIGURATION ────────────────────────────────────
+// SUPABASE_ANON_KEY is safe for client-side use and respects RLS policies.
+// The school slug is read from the URL query parameter ?school=slug
 const SUPABASE_URL = 'https://zatmvuxtgunoruvvofcr.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphdG12dXh0Z3Vub3J1dnZvZmNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMDIzMjksImV4cCI6MjA5MTU3ODMyOX0.gF6jtv4IyJj1C_XXt7ZmHXRr8ZcxAKk1CchsJvu76AI';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Get school slug from URL ?school=ludus
+// Read school slug from URL — e.g. /index.html?school=ludus
 const params = new URLSearchParams(window.location.search);
 const SCHOOL_SLUG = params.get('school') || 'ludus';
 
+// ── SCHEDULE STATE ────────────────────────────────────────────
+// S holds all schedule data loaded from Supabase for the current school.
+// It is reloaded every 60 seconds to pick up admin changes automatically.
 let S = {
   schoolName: '',
-  rotLen: 5, rotMode: 'calendar', anchor: null,
-  days: [], eods: [], dayNames: [], overrides: [], noSchool: []
+  rotLen: 5,        // Number of days in the rotation cycle
+  rotMode: 'calendar', // 'calendar' = Mon=Day1, or 'sequential' = anchor-based
+  anchor: null,     // Anchor date/dayIndex used for sequential mode
+  days: [],         // Array of schedule blocks per rotation day
+  eods: [],         // End-of-day config per rotation day
+  dayNames: [],     // Display names for each rotation day
+  wads: [],         // Weekly Adjusted Days (recurring day-of-week schedules)
+  overrides: [],    // One-time date-specific schedule overrides
+  noSchool: []      // Dates when school is closed
 };
 
+// ── DEFAULT SCHEDULE ──────────────────────────────────────────
+// Used as fallback when no schedule data exists for a rotation day
 const DEFAULT_SCHEDULE = [
   {name:"Morning Homeroom",start:"08:00",end:"08:15",isBreak:false},
   {name:"Period 1",start:"08:15",end:"09:10",isBreak:false},
@@ -192,6 +250,8 @@ const DEFAULT_SCHEDULE = [
 const DEFAULT_EOD = {name:"School day ends", end:"15:10", show:false};
 
 // ── LOAD FROM SUPABASE ────────────────────────────────────────
+// Fetches school and schedule data from Supabase using the URL slug.
+// Called on page load and every 60 seconds to pick up admin changes.
 async function loadFromSupabase() {
   const { data: schoolData, error: schoolError } = await db
     .from('schools')
@@ -199,6 +259,7 @@ async function loadFromSupabase() {
     .eq('slug', SCHOOL_SLUG)
     .single();
 
+  // If school not found, show the error screen instead of the display
   if (schoolError || !schoolData) {
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('error-sub').textContent = 'No school found for "' + SCHOOL_SLUG + '"';
@@ -212,6 +273,7 @@ async function loadFromSupabase() {
     .eq('school_id', schoolData.id)
     .single();
 
+  // Merge saved data into the S state object
   const saved = schedData?.data || {};
   S.schoolName = schoolData.name;
   S.rotLen = saved.rotLen || 5;
@@ -220,17 +282,21 @@ async function loadFromSupabase() {
   S.days = saved.days || [];
   S.eods = saved.eods || [];
   S.dayNames = saved.dayNames || [];
-  S.overrides = saved.overrides || [];
   S.wads = saved.wads || [];
+  S.overrides = saved.overrides || [];
   S.noSchool = saved.noSchool || [];
   normalizeDays();
 
+  // Hide loading screen and show display
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('display-screen').style.display = 'grid';
   renderDisplay();
   setTimeout(scaleRowText, 50);
 }
 
+// ── NORMALIZE DAYS ────────────────────────────────────────────
+// Ensures days/eods/dayNames arrays are the correct length.
+// Pads with defaults if too short, trims if too long.
 function normalizeDays() {
   while (S.days.length < S.rotLen) S.days.push(JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)));
   while (S.eods.length < S.rotLen) S.eods.push(Object.assign({}, DEFAULT_EOD));
@@ -240,32 +306,48 @@ function normalizeDays() {
   S.dayNames = S.dayNames.slice(0, S.rotLen);
 }
 
+// Returns the display name for a given rotation day index
 function getDayName(idx) {
   return (S.dayNames && S.dayNames[idx]) ? S.dayNames[idx] : 'Day ' + (idx + 1);
 }
 
-// ── TIME UTILS ────────────────────────────────────────────────
+// ── TIME UTILITIES ────────────────────────────────────────────
+// Converts HH:MM string to total minutes since midnight
 function t2m(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
+
+// Returns current time as fractional minutes since midnight (includes seconds)
 function nowM() { const n=new Date(); return n.getHours()*60+n.getMinutes()+n.getSeconds()/60; }
+
+// Formats HH:MM to 12-hour display string (e.g. "8:15 AM")
 function fmt(t) {
   let [h,m]=t.split(':').map(Number);
   const ap=h>=12?'PM':'AM';
   if(h>12)h-=12; if(h===0)h=12;
   return h+':'+String(m).padStart(2,'0')+' '+ap;
 }
+
+// Formats a Date object as YYYY-MM-DD string
 function dateStr(d) {
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
+
+// Returns today's date as YYYY-MM-DD string
 function todayStr() { return dateStr(new Date()); }
 
 // ── ROTATION LOGIC ────────────────────────────────────────────
+// Returns the 0-based rotation day index for today.
+// Returns null if today is a weekend.
+// Two modes:
+//   calendar: Mon=0, Tue=1, ... Fri=4, wraps for rotations longer than 5 days
+//   sequential: counts school days forward/backward from an anchor date
 function getTodayDayIndex() {
   const today = new Date();
   if (S.rotMode === 'calendar') {
-    const dow = today.getDay();
-    if (dow === 0 || dow === 6) return null;
+    const dow = today.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+    if (dow === 0 || dow === 6) return null; // weekend
     return (dow - 1) % S.rotLen;
   } else {
+    // Sequential mode: count school days from anchor, skipping no-school dates
     if (!S.anchor) return 0;
     const anchorDate = new Date(S.anchor.date + 'T12:00:00');
     const anchorIdx = S.anchor.dayIndex;
@@ -275,6 +357,7 @@ function getTodayDayIndex() {
     const anchorDay = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
     let cur;
     if (todayDate < anchorDay) {
+      // Count backwards if today is before the anchor
       cur = new Date(anchorDay);
       cur.setDate(cur.getDate() - 1);
       while (cur >= todayDate) {
@@ -284,6 +367,7 @@ function getTodayDayIndex() {
         cur.setDate(cur.getDate() - 1);
       }
     } else {
+      // Count forwards if today is after the anchor
       cur = new Date(anchorDay);
       cur.setDate(cur.getDate() + 1);
       while (cur <= todayDate) {
@@ -297,14 +381,21 @@ function getTodayDayIndex() {
   }
 }
 
+// Returns the date override for today if one exists, otherwise null
 function getOverrideForToday() {
   const ts = todayStr();
   return S.overrides.find(o => o.date === ts) || null;
 }
 
+// Returns true if today is marked as a no-school date
 function isNoSchoolToday() { return S.noSchool.some(n => n.date === todayStr()); }
+
+// Returns true if today is Saturday or Sunday
 function isWeekend() { const d = new Date().getDay(); return d === 0 || d === 6; }
 
+// ── BUILD SCHEDULE LIST ───────────────────────────────────────
+// Combines the period blocks with the optional end-of-day block
+// into a single flat array used for rendering
 function buildList(blocks, eod) {
   const es = blocks.length ? blocks[blocks.length-1].end : '08:00';
   const list = [...blocks];
@@ -312,13 +403,19 @@ function buildList(blocks, eod) {
   return list;
 }
 
+// ── GET ACTIVE SCHEDULE ───────────────────────────────────────
+// Determines which schedule to show today using this priority order:
+//   1. Date Override (highest priority — specific date)
+//   2. Weekly Adjusted Day (recurring day-of-week schedule)
+//   3. Normal Rotation Day (fallback)
+// Returns null if today is a weekend with no override.
 function getActiveSchedule() {
-  // Priority 1: Date override (specific date takes highest priority)
+  // Priority 1: Date override
   const ov = getOverrideForToday();
   if (ov) return { blocks: ov.blocks, eod: ov.eod, label: ov.label, isOverride: true };
 
-  // Priority 2: Weekly Adjusted Day (recurring day-of-week schedule)
-  // day of week: 0=Sun, 1=Mon...6=Sat. WADs use 0=Mon...4=Fri so we subtract 1
+  // Priority 2: Weekly Adjusted Day
+  // JS getDay() returns 0=Sun...6=Sat, WADs use 0=Mon...4=Fri
   const todayDow = new Date().getDay();
   if (todayDow >= 1 && todayDow <= 5) {
     const wadDow = todayDow - 1; // convert to 0=Mon...4=Fri
@@ -326,13 +423,15 @@ function getActiveSchedule() {
     if (wad) return { blocks: wad.blocks, eod: wad.eod, label: wad.label || wad.dayName, isOverride: false, isWad: true };
   }
 
-  // Priority 3: Normal rotation day (fallback)
+  // Priority 3: Normal rotation day
   const idx = getTodayDayIndex();
   if (idx === null) return null;
-  return { blocks: S.days[idx], eod: S.eods[idx], label: null, isOverride: false, dayIdx: idx };
+  return { blocks: S.days[idx], eod: S.eods[idx], label: null, isOverride: false, isWad: false, dayIdx: idx };
 }
 
-// ── DISPLAY ───────────────────────────────────────────────────
+// ── CLOCK RENDERING ───────────────────────────────────────────
+// Updates the clock display for either the main screen (prefix='d')
+// or the no-school screen (prefix='ns'). Called every second.
 function renderClock(prefix) {
   const now = new Date();
   let h = now.getHours(); const m = String(now.getMinutes()).padStart(2,'0');
@@ -348,8 +447,13 @@ function renderClock(prefix) {
   if (document.getElementById('d-weekday')) document.getElementById('d-weekday').textContent = dn[now.getDay()];
 }
 
+// Helper: sets the text content of an element by ID
 function set(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
 
+// ── MAIN DISPLAY RENDER ───────────────────────────────────────
+// Called every 10 seconds and on data reload.
+// Decides whether to show the normal schedule, no-school screen,
+// or empty state, then delegates to sub-renderers.
 function renderDisplay() {
   renderClock('d');
   set('d-school', S.schoolName);
@@ -360,6 +464,7 @@ function renderDisplay() {
   const nsEl = document.getElementById('noschool-screen');
   const dsEl = document.getElementById('display-screen');
 
+  // Show no-school screen for weekends and configured no-school dates
   if (noSch || weekend) {
     dsEl.style.display = 'none';
     nsEl.classList.add('visible');
@@ -381,9 +486,11 @@ function renderDisplay() {
   const active = getActiveSchedule();
   if (!active) { renderEmptyState(); return; }
 
+  // Destructure active schedule — isWad flag distinguishes WAD from rotation day
   const { blocks, eod, label, isOverride, isWad, dayIdx } = active;
   const list = buildList(blocks, eod);
 
+  // Set day badge and schedule header label
   set('d-daybadge', isOverride || isWad ? label : getDayName(dayIdx));
   set('d-override-label', isOverride || isWad ? label + ' Schedule' : getDayName(dayIdx) + ' Schedule');
 
@@ -392,19 +499,26 @@ function renderDisplay() {
   if (rebuilt) setTimeout(scaleRowText, 50);
 }
 
+// ── NOW CARD RENDER ───────────────────────────────────────────
+// Updates the current period card in the left panel.
+// Shows period name, time range, progress bar, and time remaining.
 function renderCard(list) {
   const now = nowM();
   let idx = -1;
   for (let i=0;i<list.length;i++) { if(now>=t2m(list[i].start)&&now<t2m(list[i].end)){idx=i;break;} }
   const nn=document.getElementById('d-nowname'), nt=document.getElementById('d-nowtime');
   const pb=document.getElementById('d-progbar'), pr=document.getElementById('d-remain'), nl=document.getElementById('d-nowlabel');
+
   if (idx===-1) {
+    // No active period — show before/after school or passing time message
     const first=t2m(list[0].start), last=t2m(list[list.length-1].end);
     if(now<first){nn.textContent='School not yet started';nt.textContent='Starts at '+fmt(list[0].start);nl.textContent='Upcoming';}
     else if(now>=last){nn.textContent='School day complete';nt.textContent='See you tomorrow!';nl.textContent='End of day';}
     else{nn.textContent='Between periods';nt.textContent='';nl.textContent='Passing time';}
     pb.style.width='0%'; pr.textContent=''; return;
   }
+
+  // Active period found — show name, times, progress, and remaining time
   const p=list[idx], s=t2m(p.start), e=t2m(p.end);
   const pct=Math.min(100,Math.round(((now-s)/(e-s))*100));
   const rem=Math.ceil(e-now);
@@ -415,9 +529,14 @@ function renderCard(list) {
   pr.textContent = rem<=1?'< 1 min remaining':rem+' min remaining';
 }
 
-let _lastActiveIdx = -2;
-let _lastListKey = '';
+// ── SCHEDULE LIST RENDER ──────────────────────────────────────
+// Renders the full schedule list on the right side of the display.
+// Only rebuilds the DOM when the active period changes or the schedule changes.
+// Otherwise just updates the progress gradient on the current row in place.
+let _lastActiveIdx = -2;  // Tracks last active period index to avoid unnecessary rebuilds
+let _lastListKey = '';    // Tracks last schedule content to detect changes
 
+// Creates a string key representing the current schedule content
 function listKey(list) { return list.map(p => p.start+p.end+p.name).join('|'); }
 
 function renderSchedule(list, forceRebuild) {
@@ -428,6 +547,8 @@ function renderSchedule(list, forceRebuild) {
     if (now>=t2m(list[i].start) && now<t2m(list[i].end)) { curIdx=i; break; }
   }
   const key = listKey(list);
+
+  // Rebuild the entire list only when necessary
   if (forceRebuild || curIdx !== _lastActiveIdx || key !== _lastListKey) {
     _lastActiveIdx = curIdx;
     _lastListKey = key;
@@ -439,6 +560,7 @@ function renderSchedule(list, forceRebuild) {
       d.className='pr'+(p.isBreak?' brk':'')+(p.isEod?' eod':'')+(isCur?' current':isPast?' past':' future');
       d.dataset.idx = i;
       if (isCur) {
+        // Set the CSS custom property that drives the gradient fill
         const pct = Math.min(100, Math.round(((now-s)/(e-s))*100));
         d.style.setProperty('--pct', pct+'%');
       }
@@ -446,8 +568,10 @@ function renderSchedule(list, forceRebuild) {
       d.innerHTML='<div class="prt">'+fmt(p.start)+'</div><div class="prn">'+(isCur?'<span class="ndot"></span>':'')+p.name+lock+'</div><div class="pre">'+fmt(p.end)+'</div>';
       el.appendChild(d);
     });
-    return true;
+    return true; // Signal that a full rebuild occurred
   }
+
+  // Just update the gradient on the current row without rebuilding
   if (curIdx >= 0) {
     const p = list[curIdx];
     const s=t2m(p.start), e=t2m(p.end);
@@ -458,6 +582,8 @@ function renderSchedule(list, forceRebuild) {
   return false;
 }
 
+// ── EMPTY STATE ───────────────────────────────────────────────
+// Shown when no schedule is configured for today
 function renderEmptyState() {
   set('d-daybadge','—');
   set('d-nowname','No schedule configured');
@@ -465,6 +591,9 @@ function renderEmptyState() {
   document.getElementById('sched-list').innerHTML='';
 }
 
+// ── SCALE ROW TEXT ────────────────────────────────────────────
+// Dynamically scales the font size of schedule rows to fit the available height.
+// Ensures time columns don't overflow regardless of screen size.
 function scaleRowText() {
   const list = document.getElementById('sched-list');
   if (!list) return;
@@ -485,11 +614,20 @@ function scaleRowText() {
   rows.forEach(r => r.style.setProperty('--row-fs', fs));
 }
 
-// ── INIT ──────────────────────────────────────────────────────
+// ── INITIALIZATION AND INTERVALS ──────────────────────────────
+// Load data from Supabase on page load
 loadFromSupabase();
+
+// Update clock every second
 setInterval(() => { renderClock('d'); renderClock('ns'); }, 1000);
+
+// Re-render schedule display every 10 seconds (handles period transitions)
 setInterval(renderDisplay, 10000);
+
+// Reload all data from Supabase every 60 seconds (picks up admin changes)
 setInterval(loadFromSupabase, 60000);
+
+// Rebuild display on window resize or orientation change
 window.addEventListener('resize', () => { _lastActiveIdx = -2; renderDisplay(); setTimeout(scaleRowText, 50); });
 window.addEventListener('orientationchange', () => { _lastActiveIdx = -2; renderDisplay(); setTimeout(scaleRowText, 100); });
 </script>
