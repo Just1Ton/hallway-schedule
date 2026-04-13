@@ -360,13 +360,18 @@ async function loadUsers() {
 }
 
 async function addSchoolAdmin() {
-  const email = document.getElementById('new-user-email').value.trim();
-  const password = document.getElementById('new-user-password').value;
-  const schoolId = document.getElementById('new-user-school').value;
+  const emailEl = document.getElementById('new-user-email');
+  const passwordEl = document.getElementById('new-user-password');
+  const schoolEl = document.getElementById('new-user-school');
   const btn = document.getElementById('add-user-btn');
   const err = document.getElementById('add-user-error');
 
+  const email = emailEl.value.trim();
+  const password = passwordEl.value.trim();
+  const schoolId = schoolEl.value;
+
   err.classList.remove('visible');
+
   if (!email || !password || !schoolId) {
     err.textContent = 'Please fill in all fields.';
     err.classList.add('visible');
@@ -376,32 +381,48 @@ async function addSchoolAdmin() {
   btn.disabled = true;
   btn.textContent = 'Adding...';
 
-  const { data, error } = await adminDb.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true
-  });
+  try {
+    const { data, error } = await adminDb.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true
+    });
 
-  if (error) {
-    err.textContent = error.message;
+    if (error) {
+      err.textContent = error.message;
+      err.classList.add('visible');
+      btn.disabled = false;
+      btn.textContent = 'Add admin';
+      return;
+    }
+
+    const { error: profileError } = await adminDb.from('user_profiles').insert({
+      id: data.user.id,
+      role: 'schooladmin',
+      school_id: schoolId
+    });
+
+    if (profileError) {
+      err.textContent = 'User created but profile failed: ' + profileError.message;
+      err.classList.add('visible');
+      btn.disabled = false;
+      btn.textContent = 'Add admin';
+      return;
+    }
+
+    emailEl.value = '';
+    passwordEl.value = '';
+    btn.disabled = false;
+    btn.textContent = 'Add admin';
+    await loadUsers();
+    showSuccess();
+
+  } catch(e) {
+    err.textContent = 'Unexpected error: ' + e.message;
     err.classList.add('visible');
     btn.disabled = false;
     btn.textContent = 'Add admin';
-    return;
   }
-
-  await adminDb.from('user_profiles').insert({
-    id: data.user.id,
-    role: 'schooladmin',
-    school_id: schoolId
-  });
-
-  document.getElementById('new-user-email').value = '';
-  document.getElementById('new-user-password').value = '';
-  btn.disabled = false;
-  btn.textContent = 'Add admin';
-  await loadUsers();
-  showSuccess();
 }
 
 async function removeUser(userId) {
