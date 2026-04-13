@@ -221,6 +221,7 @@ async function loadFromSupabase() {
   S.eods = saved.eods || [];
   S.dayNames = saved.dayNames || [];
   S.overrides = saved.overrides || [];
+  S.wads = saved.wads || [];
   S.noSchool = saved.noSchool || [];
   normalizeDays();
 
@@ -312,8 +313,20 @@ function buildList(blocks, eod) {
 }
 
 function getActiveSchedule() {
+  // Priority 1: Date override (specific date takes highest priority)
   const ov = getOverrideForToday();
   if (ov) return { blocks: ov.blocks, eod: ov.eod, label: ov.label, isOverride: true };
+
+  // Priority 2: Weekly Adjusted Day (recurring day-of-week schedule)
+  // day of week: 0=Sun, 1=Mon...6=Sat. WADs use 0=Mon...4=Fri so we subtract 1
+  const todayDow = new Date().getDay();
+  if (todayDow >= 1 && todayDow <= 5) {
+    const wadDow = todayDow - 1; // convert to 0=Mon...4=Fri
+    const wad = (S.wads || []).find(w => w.dayOfWeek === wadDow);
+    if (wad) return { blocks: wad.blocks, eod: wad.eod, label: wad.label || wad.dayName, isOverride: false, isWad: true };
+  }
+
+  // Priority 3: Normal rotation day (fallback)
   const idx = getTodayDayIndex();
   if (idx === null) return null;
   return { blocks: S.days[idx], eod: S.eods[idx], label: null, isOverride: false, dayIdx: idx };
