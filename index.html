@@ -384,8 +384,8 @@ function renderDisplay() {
   const { blocks, eod, label, isOverride, dayIdx } = active;
   const list = buildList(blocks, eod);
 
-  set('d-daybadge', isOverride ? label : getDayName(dayIdx));
-  set('d-override-label', isOverride ? label + ' Schedule' : getDayName(dayIdx) + ' Schedule');
+  set('d-daybadge', isOverride || isWad ? label : getDayName(dayIdx));
+  set('d-override-label', isOverride || isWad ? label + ' Schedule' : getDayName(dayIdx) + ' Schedule');
 
   renderCard(list);
   const rebuilt = renderSchedule(list, false);
