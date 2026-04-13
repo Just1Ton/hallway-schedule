@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+/* ── RESET & ROOT VARIABLES ── */
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
   --bg:#0a0e1a;--panel:#111827;--panel2:#0d1320;
@@ -20,9 +21,14 @@
   --muted:#8a9ab5;
 }
 body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── LAYOUT ── */
 #app{display:none;}
 #loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;}
 .loading-text{font-family:'Fraunces',serif;font-size:1.5rem;color:var(--text3);font-weight:300;}
+
+/* ── TOP BAR ──
+   Shows school name, logged-in email, and sign out button */
 .topbar{background:var(--panel);border-bottom:0.5px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;}
 .topbar-left{display:flex;flex-direction:column;gap:.2rem;}
 .topbar-title{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:300;color:#c8bfa8;}
@@ -31,40 +37,74 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .user-pill{font-size:.68rem;color:var(--text4);background:var(--panel2);border:0.5px solid var(--border2);border-radius:6px;padding:.28rem .7rem;}
 .btn-signout{background:transparent;border:0.5px solid var(--border);border-radius:7px;color:var(--text3);font-family:'DM Mono',monospace;font-size:.7rem;padding:.3rem .8rem;cursor:pointer;}
 .btn-signout:hover{border-color:var(--red-border);color:var(--red-text);}
+
+/* ── MAIN CONTENT ── */
 .main{padding:2rem;max-width:800px;margin:0 auto;}
 .section-title{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:300;color:#c8bfa8;margin-bottom:.4rem;}
 .section-sub{font-size:.72rem;color:var(--text4);margin-bottom:1.25rem;}
+
+/* ── SUCCESS BAR ──
+   Shown briefly after a successful save, then auto-hides */
 .success-bar{background:var(--green-bg);border:0.5px solid var(--green-border);border-radius:8px;color:var(--green-accent);font-size:.74rem;padding:.5rem .9rem;margin-bottom:1rem;display:none;}
 .success-bar.visible{display:block;}
+
+/* ── CONTENT CARDS ──
+   Each section (display URL, overrides, no-school) lives in a card */
 .card{background:var(--panel);border:0.5px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;}
 .card-title{font-size:.72rem;color:var(--text4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1rem;}
+
+/* ── INFO NOTE ──
+   Instructional text shown at the top of each section */
 .info-note{font-size:.68rem;color:var(--text4);background:#0d1320;border:0.5px solid var(--border2);border-radius:7px;padding:.6rem .8rem;line-height:1.6;margin-bottom:.85rem;}
 .esec{font-size:.66rem;color:#3a4a5a;letter-spacing:.1em;text-transform:uppercase;margin:1rem 0 .45rem;padding-bottom:.25rem;border-bottom:0.5px solid #1a2535;}
+
+/* ── NO SCHOOL ROW ──
+   Each no-school date is a row with date, label, and remove button */
 .ns-row{display:grid;grid-template-columns:110px 1fr 26px;gap:.5rem;align-items:center;margin-bottom:.35rem;}
 .ns-row input{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
+
+/* ── SCHEDULE BLOCK ROW ──
+   Each time block is a row with name, start time, end time, and remove button */
 .srow{display:grid;grid-template-columns:1fr 76px 76px 26px;gap:.35rem;align-items:center;margin-bottom:.35rem;}
 .srow input{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
+
+/* ── REMOVE BUTTON ── */
 .rmv-btn{background:transparent;border:0.5px solid #3a2a2a;border-radius:5px;color:#6a3a3a;font-size:.9rem;cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .rmv-btn:hover{background:#2a1515;color:#c05050;}
+
+/* ── ADD BUTTON ──
+   Full-width green button used to add new rows */
 .add-btn{background:#0a1a0a;border:0.5px solid #1a3a1a;border-radius:7px;color:#3a7a4a;font-family:'DM Mono',monospace;font-size:.72rem;padding:.38rem .85rem;cursor:pointer;width:100%;margin-top:.3rem;}
 .add-btn:hover{background:#0f2a0f;}
+
+/* ── END OF DAY ROW ── */
 .eod-row{display:grid;grid-template-columns:1fr 88px;gap:.35rem;align-items:center;margin-bottom:.3rem;}
 .eod-row input{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
+
+/* ── SAVE BUTTON ── */
 .btn-save{background:#1a3a6a;border:0.5px solid var(--blue-border);border-radius:8px;color:var(--blue-accent);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1.2rem;cursor:pointer;margin-top:1rem;}
 .btn-save:hover{background:#1f4a80;}
+
+/* ── VIEW DISPLAY LINK ── */
 .btn-view{display:inline-block;background:transparent;border:0.5px solid var(--border);border-radius:7px;color:var(--text3);font-family:'DM Mono',monospace;font-size:.7rem;padding:.3rem .8rem;cursor:pointer;text-decoration:none;margin-top:.5rem;}
 .btn-view:hover{border-color:var(--blue-border);color:var(--blue-accent);}
+
+/* ── OVERRIDE BLOCK ──
+   Container for each date override entry */
 .override-block{background:#0d1320;border:0.5px solid #1e2a3d;border-radius:8px;padding:.75rem;margin-bottom:.6rem;}
 </style>
 </head>
 <body>
 
+<!-- Loading screen shown while auth and data are being fetched -->
 <div id="loading"><div class="loading-text">Loading...</div></div>
 
 <div id="app">
+  <!-- Top navigation bar with school name and sign out -->
   <div class="topbar">
     <div class="topbar-left">
       <div class="topbar-title">Schedule Admin</div>
+      <!-- School name populated dynamically after data loads -->
       <div class="topbar-school" id="topbar-school"></div>
     </div>
     <div class="topbar-right">
@@ -74,30 +114,34 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
   </div>
 
   <div class="main">
+    <!-- Success notification bar (auto-hides after 3 seconds) -->
     <div class="success-bar" id="success-bar">Changes saved successfully.</div>
 
-    <!-- View Display -->
+    <!-- Display URL card: shows the school's hallway display link -->
     <div class="card">
       <div class="card-title">Your display</div>
       <div style="font-size:.78rem;color:var(--text3);margin-bottom:.5rem;">Open this URL on any screen to show your hallway schedule:</div>
+      <!-- URL populated dynamically based on school slug -->
       <div id="display-url" style="font-size:.8rem;color:var(--blue-accent);background:#0d1626;border:0.5px solid var(--blue-border);border-radius:7px;padding:.5rem .75rem;margin-bottom:.5rem;word-break:break-all;"></div>
       <a id="display-link" class="btn-view" target="_blank">Open display →</a>
     </div>
 
-    <!-- Overrides -->
+    <!-- Overrides card: school admin can add/edit/remove date overrides -->
     <div class="card">
       <div class="card-title">Date overrides</div>
       <div class="info-note">Use overrides for special schedules — assemblies, early releases, exam days, etc. Overrides take priority over the normal rotation on that date.</div>
+      <!-- Override entries populated dynamically -->
       <div id="overrides-list"></div>
       <button class="add-btn" onclick="addOverride()">+ add date override</button>
       <br>
       <button class="btn-save" onclick="saveOverrides()">Save overrides</button>
     </div>
 
-    <!-- No School -->
+    <!-- No-school card: school admin can mark holidays and closures -->
     <div class="card">
       <div class="card-title">No-school dates</div>
       <div class="info-note">Mark holidays and snow days. The display will show a no-school screen on these dates.</div>
+      <!-- No-school entries populated dynamically -->
       <div id="noschool-list"></div>
       <button class="add-btn" onclick="addNoSchool()">+ add no-school date</button>
       <br>
@@ -107,12 +151,16 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 </div>
 
 <script>
+// ── SUPABASE CONFIGURATION ────────────────────────────────────
+// Uses the anon key — access is controlled by the authenticated session
 const SUPABASE_URL = 'https://zatmvuxtgunoruvvofcr.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphdG12dXh0Z3Vub3J1dnZvZmNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMDIzMjksImV4cCI6MjA5MTU3ODMyOX0.gF6jtv4IyJj1C_XXt7ZmHXRr8ZcxAKk1CchsJvu76AI';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ── DEFAULT DATA ──────────────────────────────────────────────
+// Used when creating a new override from scratch
 const DEFAULT_SCHEDULE = [
   {name:"Morning Homeroom",start:"08:00",end:"08:15",isBreak:false},
   {name:"Period 1",start:"08:15",end:"09:10",isBreak:false},
@@ -127,24 +175,34 @@ const DEFAULT_SCHEDULE = [
 ];
 const DEFAULT_EOD = {name:"School day ends", end:"15:10", show:false};
 
+// ── STATE ─────────────────────────────────────────────────────
+// schoolId: the UUID of the logged-in school admin's school
+// schoolSlug: used to build the display URL
+// currentData: full schedule data object loaded from Supabase
+// overrides: working copy of the overrides array being edited
+// noSchool: working copy of the no-school dates array being edited
 let schoolId = null;
 let schoolSlug = null;
 let currentData = {};
 let overrides = [];
 let noSchool = [];
 
-// ── AUTH ──────────────────────────────────────────────────────
+// ── AUTHENTICATION ────────────────────────────────────────────
+// Checks session on page load. Redirects to login if not authenticated
+// or if the user does not have the schooladmin role.
 async function init() {
   try {
     const { data: { session } } = await db.auth.getSession();
     if (!session) { window.location.href = '/login.html'; return; }
 
+    // Load user profile to verify role and get assigned school
     const { data: profile } = await db
       .from('user_profiles')
       .select('role, school_id')
       .eq('id', session.user.id)
       .single();
 
+    // Only schooladmin role is allowed here — superadmins use admin.html
     if (!profile || profile.role !== 'schooladmin') {
       window.location.href = '/login.html';
       return;
@@ -161,7 +219,11 @@ async function init() {
   }
 }
 
+// ── LOAD DATA ─────────────────────────────────────────────────
+// Fetches school name, slug, and full schedule data from Supabase.
+// Populates the display URL and renders the override and no-school lists.
 async function loadData() {
+  // Get school name and slug for display URL
   const { data: schoolData } = await db
     .from('schools')
     .select('name, slug')
@@ -171,10 +233,12 @@ async function loadData() {
   schoolSlug = schoolData.slug;
   document.getElementById('topbar-school').textContent = schoolData.name;
 
+  // Build and display the hallway display URL for this school
   const displayUrl = window.location.origin + '/index.html?school=' + schoolSlug;
   document.getElementById('display-url').textContent = displayUrl;
   document.getElementById('display-link').href = displayUrl;
 
+  // Load full schedule data
   const { data: schedData } = await db
     .from('schedules')
     .select('data')
@@ -182,6 +246,8 @@ async function loadData() {
     .single();
 
   currentData = schedData?.data || {};
+
+  // Create working copies for editing — changes are only saved on button press
   overrides = JSON.parse(JSON.stringify(currentData.overrides || []));
   noSchool = JSON.parse(JSON.stringify(currentData.noSchool || []));
 
@@ -189,12 +255,15 @@ async function loadData() {
   renderNoSchool();
 }
 
+// Signs out the current user and redirects to login
 async function signOut() {
   await db.auth.signOut();
   window.location.href = '/login.html';
 }
 
 // ── OVERRIDES ─────────────────────────────────────────────────
+// Renders the list of date overrides.
+// Each override has a date, label, time blocks, and end-of-day config.
 function renderOverrides() {
   const el = document.getElementById('overrides-list');
   el.innerHTML = '';
@@ -202,15 +271,19 @@ function renderOverrides() {
     const r = document.createElement('div');
     r.className = 'override-block';
 
+    // Override header: date input, label input, remove button
     let html = '<div style="display:grid;grid-template-columns:110px 1fr 26px;gap:.4rem;align-items:center;margin-bottom:.5rem;">'
       + '<input type="date" value="' + ov.date + '" id="ovd-' + i + '" style="padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:DM Mono,monospace;width:100%;">'
       + '<input type="text" value="' + (ov.label || '') + '" id="ovl-' + i + '" placeholder="Label (e.g. Assembly Day)" style="padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:DM Mono,monospace;width:100%;">'
       + '<button class="rmv-btn" onclick="removeOverride(' + i + ')">&minus;</button>'
       + '</div>';
 
+    // Time blocks section header
     html += '<div style="font-size:.64rem;color:#3a4a5a;letter-spacing:.08em;text-transform:uppercase;margin:.4rem 0 .3rem;">Time blocks <span style="font-style:italic;text-transform:none;color:#2a3a4a;">name / start / end</span></div>';
     html += '<div id="ovped-' + i + '"></div>';
     html += '<button class="add-btn" onclick="addOverrideBlock(' + i + ')">+ add block</button>';
+
+    // End of day section
     html += '<div style="margin-top:.5rem;font-size:.64rem;color:#3a4a5a;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.3rem;">End of day</div>';
     html += '<div class="eod-row">'
       + '<input type="text" id="oveodn-' + i + '" value="' + ov.eod.name + '" placeholder="End of day label" style="padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:DM Mono,monospace;">'
@@ -222,6 +295,7 @@ function renderOverrides() {
   });
 }
 
+// Renders the time block rows for a specific override
 function buildOverridePed(i) {
   const ov = overrides[i];
   const el = document.getElementById('ovped-' + i);
@@ -238,16 +312,24 @@ function buildOverridePed(i) {
   });
 }
 
+// Adds a new time block to an override, auto-setting start to last block's end time
 function addOverride() {
-  overrides.push({ date: todayStr(), label: 'Special Day', blocks: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)), eod: Object.assign({}, DEFAULT_EOD) });
+  overrides.push({
+    date: todayStr(),
+    label: 'Special Day',
+    blocks: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)),
+    eod: Object.assign({}, DEFAULT_EOD)
+  });
   renderOverrides();
 }
 
+// Removes an override by index and re-renders the list
 function removeOverride(i) {
   overrides.splice(i, 1);
   renderOverrides();
 }
 
+// Adds a new time block to a specific override
 function addOverrideBlock(i) {
   syncOverrideFields(i);
   const blocks = overrides[i].blocks;
@@ -255,16 +337,23 @@ function addOverrideBlock(i) {
   const [lh, lm] = last.split(':').map(Number);
   let nm = lh * 60 + lm + 50;
   const nh = Math.floor(nm / 60) % 24, nmm = nm % 60;
-  blocks.push({ name: 'New Period', start: last, end: String(nh).padStart(2,'0') + ':' + String(nmm).padStart(2,'0'), isBreak: false });
+  blocks.push({
+    name: 'New Period',
+    start: last,
+    end: String(nh).padStart(2,'0') + ':' + String(nmm).padStart(2,'0'),
+    isBreak: false
+  });
   buildOverridePed(i);
 }
 
+// Removes a time block from a specific override
 function removeOverrideBlock(i, bi) {
   syncOverrideFields(i);
   overrides[i].blocks.splice(bi, 1);
   buildOverridePed(i);
 }
 
+// Reads current field values back into the overrides working array
 function syncOverrideFields(i) {
   const ov = overrides[i];
   const dvd = document.getElementById('ovd-' + i), dvl = document.getElementById('ovl-' + i);
@@ -281,17 +370,25 @@ function syncOverrideFields(i) {
   if (ee) ov.eod.end = ee.value || ov.eod.end;
 }
 
+// Saves the overrides array to Supabase, merging with existing schedule data
 async function saveOverrides() {
+  // Sync all field values before saving
   overrides.forEach((ov, i) => syncOverrideFields(i));
+
+  // Merge overrides into the full data payload, preserving all other fields
   const payload = Object.assign({}, currentData, { overrides });
   await db.from('schedules')
     .update({ data: payload, updated_at: new Date().toISOString() })
     .eq('school_id', schoolId);
+
+  // Update local currentData so subsequent saves don't overwrite this change
   currentData = payload;
   showSuccess();
 }
 
-// ── NO SCHOOL ─────────────────────────────────────────────────
+// ── NO SCHOOL DATES ───────────────────────────────────────────
+// Renders the list of no-school dates.
+// Each entry has a date and an optional label (e.g. "Thanksgiving").
 function renderNoSchool() {
   const el = document.getElementById('noschool-list');
   el.innerHTML = '';
@@ -305,34 +402,53 @@ function renderNoSchool() {
   });
 }
 
-function addNoSchool() { noSchool.push({ date: todayStr(), label: '' }); renderNoSchool(); }
-function removeNoSchool(i) { noSchool.splice(i, 1); renderNoSchool(); }
+// Adds a new no-school date entry defaulting to today
+function addNoSchool() {
+  noSchool.push({ date: todayStr(), label: '' });
+  renderNoSchool();
+}
 
+// Removes a no-school date by index and re-renders the list
+function removeNoSchool(i) {
+  noSchool.splice(i, 1);
+  renderNoSchool();
+}
+
+// Saves the no-school dates array to Supabase, merging with existing schedule data
 async function saveNoSchool() {
+  // Sync all field values before saving
   noSchool.forEach((n, i) => {
     const d = document.getElementById('nsd-' + i), l = document.getElementById('nsl-' + i);
-    if (d) n.date = d.value; if (l) n.label = l.value.trim();
+    if (d) n.date = d.value;
+    if (l) n.label = l.value.trim();
   });
+
+  // Merge noSchool into the full data payload, preserving all other fields
   const payload = Object.assign({}, currentData, { noSchool });
   await db.from('schedules')
     .update({ data: payload, updated_at: new Date().toISOString() })
     .eq('school_id', schoolId);
+
+  // Update local currentData so subsequent saves don't overwrite this change
   currentData = payload;
   showSuccess();
 }
 
-// ── UTILS ─────────────────────────────────────────────────────
+// ── UTILITIES ─────────────────────────────────────────────────
+// Returns today's date as YYYY-MM-DD string
 function todayStr() {
   const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
+// Shows the success bar briefly then hides it after 3 seconds
 function showSuccess() {
   const bar = document.getElementById('success-bar');
   bar.classList.add('visible');
   setTimeout(() => bar.classList.remove('visible'), 3000);
 }
 
+// ── START ─────────────────────────────────────────────────────
 init();
 </script>
 </body>
