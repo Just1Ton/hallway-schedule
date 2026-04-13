@@ -499,6 +499,19 @@ function renderDisplay() {
   if (rebuilt) setTimeout(scaleRowText, 50);
 }
 
+// ── CARD TICK ─────────────────────────────────────────────────
+// Called every second to keep the progress bar smooth and show
+// a seconds countdown in the last minute of any period or passing time.
+// Only updates the card elements — does not rebuild the schedule list.
+function renderCardTick() {
+  const active = getActiveSchedule();
+  if (!active) return;
+  const { blocks, eod } = active;
+  const list = buildList(blocks, eod);
+  if (!list || !list.length) return;
+  renderCard(list);
+}
+
 // ── NOW CARD RENDER ───────────────────────────────────────────
 // Updates the current period card in the left panel.
 // Shows period name, time range, progress bar, and time remaining.
@@ -538,7 +551,13 @@ function renderCard(list) {
         nn.textContent = next.name + ' starts soon';
         nt.textContent = 'Begins at ' + fmt(next.start);
         pb.style.width = pct + '%';
-        pr.textContent = gapRemain <= 1 ? '< 1 min' : gapRemain + ' min until next class';
+        // In the last minute of passing time, show seconds countdown
+        if (gapRemain <= 1) {
+          const remSecs = Math.ceil((gapEnd - now) * 60);
+          pr.textContent = remSecs <= 0 ? 'Starting now' : remSecs + 's until next class';
+        } else {
+          pr.textContent = Math.ceil(gapRemain) + ' min until next class';
+        }
       }
     }
     return;
@@ -546,13 +565,21 @@ function renderCard(list) {
 
   // Active period found — show name, times, progress, and remaining time
   const p=list[idx], s=t2m(p.start), e=t2m(p.end);
-  const pct=Math.min(100,Math.round(((now-s)/(e-s))*100));
-  const rem=Math.ceil(e-now);
+  const nowExact = nowM();
+  const pct=Math.min(100,((nowExact-s)/(e-s))*100);
+  const remMins = e - nowExact;
   nl.textContent = p.isEod ? 'End of school day' : p.isBreak ? p.name : 'Now in session';
   nn.textContent = p.name;
   nt.textContent = fmt(p.start)+' \u2013 '+fmt(p.end);
   pb.style.width = pct+'%';
-  pr.textContent = rem<=1?'< 1 min remaining':rem+' min remaining';
+
+  // In the last minute, show a seconds countdown instead of minutes
+  if (remMins <= 1) {
+    const remSecs = Math.ceil(remMins * 60);
+    pr.textContent = remSecs <= 0 ? 'Starting now' : remSecs + 's remaining';
+  } else {
+    pr.textContent = Math.ceil(remMins) + ' min remaining';
+  }
 }
 
 // ── SCHEDULE LIST RENDER ──────────────────────────────────────
@@ -647,7 +674,10 @@ loadFromSupabase();
 // Update clock every second
 setInterval(() => { renderClock('d'); renderClock('ns'); }, 1000);
 
-// Re-render schedule display every 10 seconds (handles period transitions)
+// Update card every second for smooth progress bar and seconds countdown
+setInterval(renderCardTick, 1000);
+
+// Re-render full schedule display every 10 seconds (handles period transitions)
 setInterval(renderDisplay, 10000);
 
 // Reload all data from Supabase every 60 seconds (picks up admin changes)
