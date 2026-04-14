@@ -418,7 +418,18 @@ function getActiveSchedule() {
   if (todayDow >= 1 && todayDow <= 5) {
     const wadDow = todayDow - 1; // convert to 0=Mon...4=Fri
     const wad = (S.wads || []).find(w => w.dayOfWeek === wadDow);
-    if (wad) return { blocks: wad.blocks, eod: wad.eod, label: wad.label || wad.dayName, isOverride: false, isWad: true };
+    if (wad) {
+      // If WAD has per-rotation-day variants, find the matching one
+      if (wad.variants && wad.variants.length > 0) {
+        const rotIdx = getTodayDayIndex();
+        const variant = wad.variants.find(v => v.rotDayIdx === rotIdx);
+        if (variant) {
+          return { blocks: variant.blocks, eod: variant.eod, label: wad.label || wad.dayName, isOverride: false, isWad: true };
+        }
+      }
+      // Backward compatible: single schedule WAD
+      return { blocks: wad.blocks, eod: wad.eod, label: wad.label || wad.dayName, isOverride: false, isWad: true };
+    }
   }
 
   // Priority 3: Normal rotation day
