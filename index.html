@@ -424,7 +424,9 @@ function getActiveSchedule() {
         const rotIdx = getTodayDayIndex();
         const variant = wad.variants.find(v => v.rotDayIdx === rotIdx);
         if (variant) {
-          return { blocks: variant.blocks, eod: variant.eod, label: wad.label || wad.dayName, isOverride: false, isWad: true };
+          const rotDayName = S.dayNames[rotIdx] || 'Day ' + (rotIdx + 1);
+          const wadLabel = (wad.label || wad.dayName) + ' — ' + rotDayName;
+          return { blocks: variant.blocks, eod: variant.eod, label: wadLabel, isOverride: false, isWad: true };
         }
       }
       // Backward compatible: single schedule WAD
