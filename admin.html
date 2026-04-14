@@ -758,12 +758,14 @@ function syncDayFields(idx) {
 
 // ── WEEKLY ADJUSTED DAYS (WAD) ────────────────────────────────
 // WADs are recurring schedules tied to a day of the week.
-// Each WAD has: dayOfWeek (0=Mon...4=Fri), dayName, blocks[], eod{}
+// Each WAD can have either:
+//   - A single schedule (blocks/eod) applied regardless of rotation day (legacy)
+//   - Per-rotation-day variants, one for each day in the rotation cycle
 // Priority: Date Override > WAD > Normal Rotation Day
 
-// Renders the WAD editor for a specific WAD index
+// Renders the WAD overview tab showing all configured WADs
 function renderWADTab(idx) {
-  // If no index provided, show the WAD list overview tab
+  // If no index provided, show the WAD list overview
   if (idx === undefined) {
     document.getElementById('tab-wad').classList.add('active');
     renderWADList();
@@ -771,97 +773,178 @@ function renderWADTab(idx) {
   }
 
   const wad = currentData.wads[idx];
+  const rotLen = parseInt(document.getElementById('g-rotlen').value) || currentData.rotLen;
+
+  // Ensure variants array exists and has the correct number of entries
+  if (!wad.variants || wad.variants.length !== rotLen) {
+    wad.variants = [];
+    for (let i = 0; i < rotLen; i++) {
+      wad.variants.push({
+        rotDayIdx: i,
+        blocks: wad.blocks ? JSON.parse(JSON.stringify(wad.blocks)) : JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)),
+        eod: wad.eod ? Object.assign({}, wad.eod) : Object.assign({}, DEFAULT_EOD)
+      });
+    }
+  }
+
   const panel = document.createElement('div');
   panel.className = 'tab-panel day-tab-panel active';
   panel.id = 'wad-panel-' + idx;
 
+  // WAD header: day of week selector and label
   let html = '<div class="mf"><label>Day of Week</label><select id="waddow-' + idx + '" style="width:100%;">';
   DAYS_OF_WEEK.forEach((d, di) => {
     html += '<option value="' + di + '"' + (wad.dayOfWeek === di ? ' selected' : '') + '>' + d + '</option>';
   });
   html += '</select></div>';
-  html += '<div class="mf"><label>Label (shown on display)</label><input type="text" id="wadlabel-' + idx + '" value="' + (wad.label || '').replace(/"/g,'&quot;') + '" placeholder="e.g. Wednesday Schedule" style="width:100%;"/></div>';
-  html += '<div class="esec">Time blocks <span style="font-size:.62rem;font-style:italic;color:#2a3a4a;">name / start / end</span></div>';
-  html += '<div id="wadped-' + idx + '"></div>';
-  html += '<button class="add-btn" onclick="addWADBlock(' + idx + ')">+ add time block</button>';
-  html += '<div class="esec">End of day</div>';
-  const eodChecked = wad.eod.show ? 'checked' : '';
-  html += '<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;"><label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;color:' + (wad.eod.show?'#4a8060':'#4a6080') + ';cursor:pointer;"><input type="checkbox" id="wadeodshow-' + idx + '" ' + eodChecked + ' style="width:14px;height:14px;cursor:pointer;accent-color:#4a8060;"> Show end-of-day block</label></div>';
-  html += '<div class="eod-row"><input type="text" id="wadeodn-' + idx + '" value="' + wad.eod.name + '"/><input type="time" id="wadeode-' + idx + '" value="' + wad.eod.end + '"/></div>';
+  html += '<div class="mf"><label>Label (shown on display)</label><input type="text" id="wadlabel-' + idx + '" value="' + (wad.label || '').replace(/"/g,'&quot;') + '" placeholder="e.g. Tuesday Schedule" style="width:100%;"/></div>';
+
+  // Sub-tab bar for each rotation day variant
+  html += '<div style="font-size:.66rem;color:#3a4a5a;letter-spacing:.1em;text-transform:uppercase;margin:.75rem 0 .4rem;">Schedule per rotation day</div>';
+  html += '<div class="tab-bar" id="wad-subtab-bar-' + idx + '" style="margin-bottom:.75rem;"></div>';
+  html += '<div id="wad-subtab-content-' + idx + '"></div>';
+
+  // Remove WAD button
   html += '<div style="margin-top:1rem;"><button class="btn-danger" onclick="removeWAD(' + idx + ')">Remove this Weekly Adjusted Day</button></div>';
 
   panel.innerHTML = html;
   document.getElementById('modal').insertBefore(panel, document.querySelector('.mac'));
-  buildWADBlockRows(idx);
+
+  // Build the sub-tabs for each rotation day variant
+  buildWADSubTabs(idx, 0);
 }
 
-// Renders the time block rows for a WAD
-function buildWADBlockRows(idx) {
-  const wad = currentData.wads[idx];
-  const el = document.getElementById('wadped-' + idx);
+// Builds the sub-tab bar for a WAD's rotation day variants
+function buildWADSubTabs(wadIdx, activeVariantIdx) {
+  const wad = currentData.wads[wadIdx];
+  const bar = document.getElementById('wad-subtab-bar-' + wadIdx);
+  if (!bar) return;
+  bar.innerHTML = '';
+
+  wad.variants.forEach((variant, vi) => {
+    const btn = document.createElement('button');
+    const name = modalDayNames[vi] || 'Day ' + (vi + 1);
+    btn.className = 'tab' + (vi === activeVariantIdx ? ' active' : '');
+    btn.textContent = name;
+    btn.onclick = () => {
+      // Sync current variant fields before switching
+      syncWADVariantFields(wadIdx, activeVariantIdx);
+      buildWADSubTabs(wadIdx, vi);
+    };
+    bar.appendChild(btn);
+  });
+
+  // Render the active variant's schedule editor
+  renderWADVariant(wadIdx, activeVariantIdx);
+}
+
+// Renders the schedule editor for a specific WAD rotation day variant
+function renderWADVariant(wadIdx, variantIdx) {
+  const wad = currentData.wads[wadIdx];
+  const variant = wad.variants[variantIdx];
+  const content = document.getElementById('wad-subtab-content-' + wadIdx);
+  if (!content) return;
+
+  const dayName = modalDayNames[variantIdx] || 'Day ' + (variantIdx + 1);
+
+  let html = '<div style="font-size:.68rem;color:var(--text4);margin-bottom:.6rem;">Schedule for <span style="color:var(--orange-accent);">' + dayName + '</span> when it falls on a ' + (DAYS_OF_WEEK[wad.dayOfWeek] || 'adjusted') + '</div>';
+  html += '<div class="esec">Time blocks <span style="font-size:.62rem;font-style:italic;color:#2a3a4a;">name / start / end</span></div>';
+  html += '<div id="wadvarped-' + wadIdx + '-' + variantIdx + '"></div>';
+  html += '<button class="add-btn" onclick="addWADVariantBlock(' + wadIdx + ',' + variantIdx + ')">+ add time block</button>';
+  html += '<div class="esec">End of day</div>';
+  const eodChecked = variant.eod.show ? 'checked' : '';
+  html += '<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;"><label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;color:' + (variant.eod.show?'#4a8060':'#4a6080') + ';cursor:pointer;"><input type="checkbox" id="wadvareodshow-' + wadIdx + '-' + variantIdx + '" ' + eodChecked + ' style="width:14px;height:14px;cursor:pointer;accent-color:#4a8060;"> Show end-of-day block</label></div>';
+  html += '<div class="eod-row"><input type="text" id="wadvareodn-' + wadIdx + '-' + variantIdx + '" value="' + variant.eod.name + '"/><input type="time" id="wadvareode-' + wadIdx + '-' + variantIdx + '" value="' + variant.eod.end + '"/></div>';
+
+  content.innerHTML = html;
+  buildWADVariantRows(wadIdx, variantIdx);
+}
+
+// Renders the time block rows for a WAD variant
+function buildWADVariantRows(wadIdx, variantIdx) {
+  const variant = currentData.wads[wadIdx].variants[variantIdx];
+  const el = document.getElementById('wadvarped-' + wadIdx + '-' + variantIdx);
   if (!el) return;
   el.innerHTML = '';
-  wad.blocks.forEach((p, bi) => {
+  variant.blocks.forEach((p, bi) => {
     const r = document.createElement('div');
     r.className = 'srow';
-    r.innerHTML = '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="wadbn-' + idx + '-' + bi + '">'
-      + '<input type="time" value="' + p.start + '" id="wadbs-' + idx + '-' + bi + '">'
-      + '<input type="time" value="' + p.end + '" id="wadbe-' + idx + '-' + bi + '">'
-      + '<button class="rmv-btn" onclick="removeWADBlock(' + idx + ',' + bi + ')">&minus;</button>';
+    r.innerHTML = '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="wadvarbn-' + wadIdx + '-' + variantIdx + '-' + bi + '">'
+      + '<input type="time" value="' + p.start + '" id="wadvarbs-' + wadIdx + '-' + variantIdx + '-' + bi + '">'
+      + '<input type="time" value="' + p.end + '" id="wadvarbe-' + wadIdx + '-' + variantIdx + '-' + bi + '">'
+      + '<button class="rmv-btn" onclick="removeWADVariantBlock(' + wadIdx + ',' + variantIdx + ',' + bi + ')">&minus;</button>';
     el.appendChild(r);
   });
 }
 
-// Adds a new time block to a WAD
-function addWADBlock(idx) {
-  syncWADFields(idx);
-  const blocks = currentData.wads[idx].blocks;
+// Adds a new time block to a WAD variant
+function addWADVariantBlock(wadIdx, variantIdx) {
+  syncWADVariantFields(wadIdx, variantIdx);
+  const blocks = currentData.wads[wadIdx].variants[variantIdx].blocks;
   const last = blocks.length ? blocks[blocks.length - 1].end : '08:00';
   const [lh, lm] = last.split(':').map(Number);
   let nm = lh * 60 + lm + 50;
   const nh = Math.floor(nm / 60) % 24, nmm = nm % 60;
   blocks.push({ name: 'New Period', start: last, end: String(nh).padStart(2,'0') + ':' + String(nmm).padStart(2,'0'), isBreak: false });
-  buildWADBlockRows(idx);
+  buildWADVariantRows(wadIdx, variantIdx);
 }
 
-// Removes a time block from a WAD
-function removeWADBlock(idx, bi) {
-  syncWADFields(idx);
-  currentData.wads[idx].blocks.splice(bi, 1);
-  buildWADBlockRows(idx);
+// Removes a time block from a WAD variant
+function removeWADVariantBlock(wadIdx, variantIdx, bi) {
+  syncWADVariantFields(wadIdx, variantIdx);
+  currentData.wads[wadIdx].variants[variantIdx].blocks.splice(bi, 1);
+  buildWADVariantRows(wadIdx, variantIdx);
 }
 
-// Reads current WAD field values back into currentData.wads
+// Reads current WAD variant field values back into currentData
+function syncWADVariantFields(wadIdx, variantIdx) {
+  const variant = currentData.wads[wadIdx].variants[variantIdx];
+  variant.blocks = variant.blocks.map((p, bi) => ({
+    name: (document.getElementById('wadvarbn-' + wadIdx + '-' + variantIdx + '-' + bi) || { value: p.name }).value.trim() || p.name,
+    start: (document.getElementById('wadvarbs-' + wadIdx + '-' + variantIdx + '-' + bi) || { value: p.start }).value || p.start,
+    end: (document.getElementById('wadvarbe-' + wadIdx + '-' + variantIdx + '-' + bi) || { value: p.end }).value || p.end,
+    isBreak: p.isBreak
+  }));
+  const en = document.getElementById('wadvareodn-' + wadIdx + '-' + variantIdx);
+  const ee = document.getElementById('wadvareode-' + wadIdx + '-' + variantIdx);
+  const es = document.getElementById('wadvareodshow-' + wadIdx + '-' + variantIdx);
+  if (en) variant.eod.name = en.value.trim() || variant.eod.name;
+  if (ee) variant.eod.end = ee.value || variant.eod.end;
+  if (es) variant.eod.show = es.checked;
+}
+
+// Reads the WAD header fields (day of week, label) back into currentData
 function syncWADFields(idx) {
   const wad = currentData.wads[idx];
   const dow = document.getElementById('waddow-' + idx);
   const lbl = document.getElementById('wadlabel-' + idx);
   if (dow) { wad.dayOfWeek = parseInt(dow.value); wad.dayName = DAYS_OF_WEEK[wad.dayOfWeek]; }
   if (lbl) wad.label = lbl.value.trim();
-  wad.blocks = wad.blocks.map((p, bi) => ({
-    name: (document.getElementById('wadbn-' + idx + '-' + bi) || { value: p.name }).value.trim() || p.name,
-    start: (document.getElementById('wadbs-' + idx + '-' + bi) || { value: p.start }).value || p.start,
-    end: (document.getElementById('wadbe-' + idx + '-' + bi) || { value: p.end }).value || p.end,
-    isBreak: p.isBreak
-  }));
-  const en = document.getElementById('wadeodn-' + idx);
-  const ee = document.getElementById('wadeode-' + idx);
-  const es = document.getElementById('wadeodshow-' + idx);
-  if (en) wad.eod.name = en.value.trim() || wad.eod.name;
-  if (ee) wad.eod.end = ee.value || wad.eod.end;
-  if (es) wad.eod.show = es.checked;
+  // Sync all variants
+  if (wad.variants) {
+    wad.variants.forEach((v, vi) => syncWADVariantFields(idx, vi));
+  }
 }
 
-// Adds a new Weekly Adjusted Day with default schedule and opens its tab
+// Adds a new Weekly Adjusted Day with variants for each rotation day
 function addWAD() {
   if (!currentData.wads) currentData.wads = [];
-  currentData.wads.push({
-    dayOfWeek: 0,          // 0=Monday by default
+  const rotLen = parseInt(document.getElementById('g-rotlen').value) || currentData.rotLen;
+  const newWad = {
+    dayOfWeek: 0,
     dayName: 'Monday',
     label: 'Monday Schedule',
-    blocks: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)),
-    eod: Object.assign({}, DEFAULT_EOD)
-  });
+    variants: []
+  };
+  // Create a variant for each rotation day
+  for (let i = 0; i < rotLen; i++) {
+    newWad.variants.push({
+      rotDayIdx: i,
+      blocks: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)),
+      eod: Object.assign({}, DEFAULT_EOD)
+    });
+  }
+  currentData.wads.push(newWad);
   buildTabs();
   switchTab('wad-' + (currentData.wads.length - 1));
 }
@@ -874,7 +957,7 @@ function removeWAD(idx) {
   switchTab('general');
 }
 
-// Renders the WAD overview list (shown when clicking the WAD tab directly)
+// Renders the WAD overview list shown on the main WAD tab
 function renderWADList() {
   const el = document.getElementById('wad-list');
   el.innerHTML = '';
@@ -886,8 +969,9 @@ function renderWADList() {
   wads.forEach((wad, i) => {
     const r = document.createElement('div');
     r.className = 'wad-block';
+    const variantCount = wad.variants ? wad.variants.length : 1;
     r.innerHTML = '<div class="wad-block-title">' + wad.dayName + ' — ' + (wad.label || 'Weekly Adjusted Day') + '</div>'
-      + '<div style="font-size:.7rem;color:var(--text3);">' + wad.blocks.length + ' time blocks</div>';
+      + '<div style="font-size:.7rem;color:var(--text3);">' + variantCount + ' rotation day variant' + (variantCount !== 1 ? 's' : '') + '</div>';
     el.appendChild(r);
   });
 }
