@@ -425,7 +425,7 @@ function getActiveSchedule() {
         const variant = wad.variants.find(v => v.rotDayIdx === rotIdx);
         if (variant) {
           const rotDayName = S.dayNames[rotIdx] || 'Day ' + (rotIdx + 1);
-          const wadLabel = (wad.label || wad.dayName) + ' — ' + rotDayName;
+          const wadLabel = rotDayName;
           return { blocks: variant.blocks, eod: variant.eod, label: wadLabel, isOverride: false, isWad: true };
         }
       }
