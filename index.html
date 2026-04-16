@@ -719,14 +719,6 @@ function sizeRowsDebounced() {
   _sizeRowsTimer = setTimeout(sizeRows, 50);
 }
 
-// Debounced version of sizeRows — prevents multiple rapid calls
-// from causing visible flashing or layout shifts
-let _sizeRowsTimer = null;
-function sizeRowsDebounced() {
-  clearTimeout(_sizeRowsTimer);
-  _sizeRowsTimer = sizeRowsDebounced();
-}
-
 // ── ROW SIZING ────────────────────────────────────────────────
 // Sizes rows to fit exactly within the schedule list height.
 // Active row is 2x inactive height.
