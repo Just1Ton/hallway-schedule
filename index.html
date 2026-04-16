@@ -732,22 +732,26 @@ function sizeRows() {
   if (!rows.length) return;
 
   const isNarrow = window.innerWidth < 600;
-  const vh = window.innerHeight;
 
-  // Inactive row height: 7% of viewport height
-  const inactiveH = Math.max(36, vh * 0.07);
+  // Get the actual available height of the schedule list
+  const listH = list.getBoundingClientRect().height;
+  const totalRows = rows.length;
+
+  // Calculate inactive row height so all rows fit within the list
+  // Active row = 2x inactive, so: (totalRows - 1) * inactiveH + 2 * inactiveH = listH
+  // Therefore: inactiveH = listH / (totalRows + 1)
+  // Apply a multiplier to make rows slightly larger and use gap for remaining space
+  const inactiveH = (listH / (totalRows + 1)) * 1.1;
 
   // Font size proportional to row height
   const fs = inactiveH * 0.38;
 
-  // Gap between rows
-  const listH = list.getBoundingClientRect().height;
-  const totalRowH = rows.length * inactiveH;
-  const gap = Math.max(6, (listH - totalRowH) / Math.max(rows.length - 1, 1));
+  // Distribute remaining space as gap between rows
+  const totalRowH = (totalRows - 1) * inactiveH + inactiveH * 2;
+  const gap = Math.max(4, (listH - totalRowH) / Math.max(totalRows - 1, 1));
   list.style.gap = gap.toFixed(2) + 'px';
 
   rows.forEach(r => {
-    // Apply font size directly as inline style as well as CSS variable
     r.style.setProperty('--row-fs', fs.toFixed(2) + 'px');
     r.querySelectorAll('.prt, .prn, .pre').forEach(el => {
       el.style.fontSize = fs.toFixed(2) + 'px';
@@ -758,13 +762,12 @@ function sizeRows() {
     }
   });
 
-  // Active row
+  // Active row — 2x height, larger font
   const activeRow = list.querySelector('.pr.current');
   if (activeRow) {
     const activeH = inactiveH * 2;
     activeRow.style.minHeight = activeH.toFixed(2) + 'px';
     activeRow.style.maxHeight = activeH.toFixed(2) + 'px';
-
     const activeFontSize = isNarrow ? fs * 1.1 : fs * 2;
     activeRow.style.gap = isNarrow ? '0.5rem' : '3rem';
     activeRow.style.setProperty('--row-fs', activeFontSize.toFixed(2) + 'px');
