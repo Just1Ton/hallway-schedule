@@ -721,13 +721,9 @@ function renderEmptyState() {
 }
 
 // ── ROW SIZING ────────────────────────────────────────────────
-// Sizes schedule rows based on viewport height.
-// Inactive rows are a fixed percentage of viewport height.
-// Rows are spaced evenly to spread across the schedule area.
-// Active row is larger with bigger font on wide screens.
-// ── SCALE ROW TEXT ────────────────────────────────────────────
-// Dynamically scales schedule rows to fill the available height.
-// Active row is always 2x the height of inactive rows.
+// Sizes rows to fit exactly within the schedule list height.
+// Active row is 2x inactive height.
+// When no active period, gaps expand to fill remaining space.
 function sizeRows() {
   const list = document.getElementById('sched-list');
   if (!list) return;
@@ -735,29 +731,37 @@ function sizeRows() {
   if (!rows.length) return;
 
   const isNarrow = window.innerWidth < 600;
-  const base = parseFloat(getComputedStyle(document.documentElement).fontSize);
   const listH = list.getBoundingClientRect().height;
   const totalRows = rows.length;
-  const gapPx = 4;
-  const totalGap = gapPx * (totalRows - 1);
+  const hasActive = !!list.querySelector('.pr.current');
+  const minGap = 4;
 
-  // Calculate inactive row height so all rows + active row fill the list
-  // (totalRows - 1) * inactiveH + 2 * inactiveH + totalGap = listH
-  const inactiveH = (listH - totalGap) / (totalRows + 1);
+  let inactiveH, gap;
+
+  if (hasActive) {
+    // One row is active (2x height), rest are inactive
+    // totalRows - 1 inactive rows + 1 active row (2x) + gaps = listH
+    // (totalRows - 1) * inactiveH + 2 * inactiveH + (totalRows - 1) * minGap = listH
+    // (totalRows + 1) * inactiveH = listH - (totalRows - 1) * minGap
+    inactiveH = (listH - (totalRows - 1) * minGap) / (totalRows + 1);
+    gap = minGap;
+  } else {
+    // No active period — all rows same size, gaps fill remaining space
+    // Use a comfortable row height and expand gaps
+    inactiveH = listH / (totalRows + 1) * 0.85;
+    const totalRowH = totalRows * inactiveH;
+    gap = Math.max(minGap, (listH - totalRowH) / (totalRows - 1));
+  }
+
   const activeH = inactiveH * 2;
 
   // Font size based on inactive row height
-  let fsPx = inactiveH * 0.42;
-  fsPx = Math.min(Math.max(fsPx, base * 0.65), base * 1.5);
+  const fsPx = inactiveH * 0.42;
   const fs = fsPx.toFixed(3) + 'px';
-
-  // Active row font size — larger on wide screens, constrained on narrow
-  const activeFsPx = isNarrow
-    ? Math.min(fsPx * 1.2, 14)
-    : fsPx * 1.8;
+  const activeFsPx = isNarrow ? Math.min(fsPx * 1.2, 14) : fsPx * 1.8;
   const activeFs = activeFsPx.toFixed(3) + 'px';
 
-  list.style.gap = gapPx + 'px';
+  list.style.gap = gap.toFixed(2) + 'px';
 
   rows.forEach(r => {
     if (r.classList.contains('current')) {
@@ -770,6 +774,7 @@ function sizeRows() {
       r.style.minHeight = inactiveH.toFixed(2) + 'px';
       r.style.maxHeight = inactiveH.toFixed(2) + 'px';
       r.style.setProperty('--row-fs', fs);
+      r.style.gap = '';
       r.querySelectorAll('.prt, .prn, .pre').forEach(el => el.style.fontSize = fs);
     }
   });
