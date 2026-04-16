@@ -511,7 +511,7 @@ function renderDisplay() {
 
   renderCard(list);
   const rebuilt = renderSchedule(list, false);
-  if (rebuilt) setTimeout(sizeRows, 50);
+  if (rebuilt) sizeRowsDebounced();
 }
 
 // ── CARD TICK ─────────────────────────────────────────────────
@@ -555,7 +555,7 @@ function renderCardTick() {
     renderDisplay();
     // After rebuild, start the grow animation and scroll into view
     setTimeout(() => {
-      sizeRows();
+      sizeRowsDebounced()
       const curRow = document.querySelector('.pr.current');
       if (!curRow) return;
       curRow.classList.add('shrinking');
@@ -720,6 +720,14 @@ function renderEmptyState() {
   document.getElementById('sched-list').innerHTML='';
 }
 
+// Debounced version of sizeRows — prevents multiple rapid calls
+// from causing visible flashing or layout shifts
+let _sizeRowsTimer = null;
+function sizeRowsDebounced() {
+  clearTimeout(_sizeRowsTimer);
+  _sizeRowsTimer = sizeRowsDebounced();
+}
+
 // ── ROW SIZING ────────────────────────────────────────────────
 // Sizes rows to fit exactly within the schedule list height.
 // Active row is 2x inactive height.
@@ -822,8 +830,8 @@ setInterval(renderDisplay, 10000);
 setInterval(loadFromSupabase, 60000);
 
 // Rebuild display on window resize or orientation change
-window.addEventListener('resize', () => { _lastActiveIdx = -2; renderDisplay(); setTimeout(sizeRows, 50);});
-window.addEventListener('orientationchange', () => { _lastActiveIdx = -2; renderDisplay(); setTimeout(sizeRows, 100); });
+window.addEventListener('resize', () => { _lastActiveIdx = -2; renderDisplay(); sizeRowsDebounced();});
+window.addEventListener('orientationchange', () => { _lastActiveIdx = -2; renderDisplay(); sizeRowsDebounced(); });
 </script>
 </body>
 </html>
