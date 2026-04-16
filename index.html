@@ -769,7 +769,10 @@ function sizeRows() {
       r.style.maxHeight = activeH.toFixed(2) + 'px';
       r.style.setProperty('--row-fs', activeFs);
       r.style.gap = isNarrow ? '0.5rem' : '1.5rem';
-      r.querySelectorAll('.prt, .prn, .pre').forEach(el => el.style.fontSize = activeFs);
+      // Only period name scales up — times stay at inactive size
+      r.querySelector('.prn') && (r.querySelector('.prn').style.fontSize = activeFs);
+      r.querySelector('.prt') && (r.querySelector('.prt').style.fontSize = fs);
+      r.querySelector('.pre') && (r.querySelector('.pre').style.fontSize = fs);
     } else {
       r.style.minHeight = inactiveH.toFixed(2) + 'px';
       r.style.maxHeight = inactiveH.toFixed(2) + 'px';
