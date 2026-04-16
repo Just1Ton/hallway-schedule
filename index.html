@@ -533,14 +533,20 @@ function renderCardTick() {
     if (now >= t2m(list[i].start) && now < t2m(list[i].end)) { curIdx = i; break; }
   }
 
-  // If no active period, force a full display rebuild immediately
-  // This ensures the row stops being highlighted the moment a period ends
+  // If active period just ended (was active last tick, now isn't),
+  // force a single rebuild so the row stops being highlighted immediately.
+  // Use a flag to only trigger this once per transition, not every second.
   if (curIdx === -1) {
-    _lastActiveIdx = -2;
-    renderDisplay();
+    if (renderCardTick._wasActive) {
+      renderCardTick._wasActive = false;
+      _lastActiveIdx = -2;
+      renderDisplay();
+    }
+    renderCard(list);
     return;
   }
 
+  renderCardTick._wasActive = true;
   renderCard(list);
 
   // Handle grow/shrink animation on the active row
@@ -554,8 +560,7 @@ function renderCardTick() {
   const remaining = (e - now) * 60; // seconds until period ends
 
   if (elapsed <= 1) {
-    // First second — apply shrinking class then immediately remove it
-    // so the transition animates from small to large
+    // First second — start small then animate to full size
     curRow.classList.add('shrinking');
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -563,12 +568,13 @@ function renderCardTick() {
       });
     });
   } else if (remaining <= 1) {
-    // Last second — add shrinking class to animate back to inactive size and color
+    // Last second — animate back to inactive size and color
     curRow.classList.add('shrinking');
   } else {
     curRow.classList.remove('shrinking');
   }
 }
+renderCardTick._wasActive = false;
 
 // ── NOW CARD RENDER ───────────────────────────────────────────
 // Updates the current period card in the left panel.
