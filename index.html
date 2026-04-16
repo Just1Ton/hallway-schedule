@@ -533,9 +533,7 @@ function renderCardTick() {
     if (now >= t2m(list[i].start) && now < t2m(list[i].end)) { curIdx = i; break; }
   }
 
-  // If active period just ended (was active last tick, now isn't),
-  // force a single rebuild so the row stops being highlighted immediately.
-  // Use a flag to only trigger this once per transition, not every second.
+  // If active period just ended, trigger one rebuild then stop rebuilding
   if (curIdx === -1) {
     if (renderCardTick._wasActive) {
       renderCardTick._wasActive = false;
@@ -546,28 +544,40 @@ function renderCardTick() {
     return;
   }
 
+  // Detect when we just switched to a new period
+  const justSwitched = renderCardTick._lastCurIdx !== curIdx;
+  renderCardTick._lastCurIdx = curIdx;
   renderCardTick._wasActive = true;
+
+  // Only rebuild DOM when period changes, otherwise just update card
+  if (justSwitched) {
+    _lastActiveIdx = -2;
+    renderDisplay();
+    // After rebuild, start the grow animation by briefly applying shrinking class
+    setTimeout(() => {
+      const curRow = document.querySelector('.pr.current');
+      if (!curRow) return;
+      curRow.classList.add('shrinking');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          curRow.classList.remove('shrinking');
+        });
+      });
+    }, 50);
+    return;
+  }
+
   renderCard(list);
 
-  // Handle grow/shrink animation on the active row
+  // Handle shrink animation on the active row
   const curRow = document.querySelector('.pr.current');
   if (!curRow) return;
 
   const p = list[curIdx];
-  const s = t2m(p.start);
   const e = t2m(p.end);
-  const elapsed = (now - s) * 60;   // seconds since period started
   const remaining = (e - now) * 60; // seconds until period ends
 
-  if (elapsed <= 1) {
-    // First second — start small then animate to full size
-    curRow.classList.add('shrinking');
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        curRow.classList.remove('shrinking');
-      });
-    });
-  } else if (remaining <= 1) {
+  if (remaining <= 1) {
     // Last second — animate back to inactive size and color
     curRow.classList.add('shrinking');
   } else {
@@ -575,6 +585,7 @@ function renderCardTick() {
   }
 }
 renderCardTick._wasActive = false;
+renderCardTick._lastCurIdx = -1;
 
 // ── NOW CARD RENDER ───────────────────────────────────────────
 // Updates the current period card in the left panel.
