@@ -293,7 +293,7 @@ async function loadFromSupabase() {
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('display-screen').style.display = 'grid';
   renderDisplay();
-  setTimeout(scaleRowText, 50);
+  setTimeout(sizeRows, 50);
 }
 
 // ── NORMALIZE DAYS ────────────────────────────────────────────
@@ -511,7 +511,7 @@ function renderDisplay() {
 
   renderCard(list);
   const rebuilt = renderSchedule(list, false);
-  if (rebuilt) setTimeout(scaleRowText, 50);
+  if (rebuilt) setTimeout(sizeRows, 50);
 }
 
 // ── CARD TICK ─────────────────────────────────────────────────
