@@ -555,7 +555,6 @@ function renderCardTick() {
     renderDisplay();
     // After rebuild, start the grow animation and scroll into view
     setTimeout(() => {
-      sizeRowsDebounced()
       const curRow = document.querySelector('.pr.current');
       if (!curRow) return;
       curRow.classList.add('shrinking');
@@ -716,7 +715,7 @@ function renderSchedule(list, forceRebuild) {
 let _sizeRowsTimer = null;
 function sizeRowsDebounced() {
   clearTimeout(_sizeRowsTimer);
-  _sizeRowsTimer = setTimeout(sizeRows, 50);
+  _sizeRowsTimer = setTimeout(sizeRows, 150);
 }
 
 // ── ROW SIZING ────────────────────────────────────────────────
