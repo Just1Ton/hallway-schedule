@@ -61,17 +61,17 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
    Current row uses a CSS gradient that updates via --pct custom property */
 .pr{display:grid;grid-template-columns:minmax(0,8rem) 1fr minmax(0,7.5rem);align-items:center;gap:.5rem;padding:.55rem .9rem;border-radius:10px;border:0.5px solid transparent;position:relative;overflow:hidden;transition:min-height 1s ease, max-height 1s ease;}.pr.past{opacity:.18;background:var(--bg);filter:saturate(0);}
 .pr.future{background:var(--panel);border-color:var(--border2);}
-.pr.current{--pct:0%;background:linear-gradient(to right, #1a3a6a var(--pct), var(--blue-dark) var(--pct));border-color:var(--blue-border);padding:1.4rem 1.5rem;z-index:1;min-height:11vh;max-height:11vh;gap:3rem;transition:min-height 1s ease, max-height 1s ease, padding 1s ease, gap 1s ease, background 1s ease, border-color 1s ease;}
-.pr.current.shrinking{padding:.55rem .9rem;min-height:5.5vh;max-height:5.5vh;gap:.5rem;background:var(--panel);border-color:var(--border2);}
+.pr.current{--pct:0%;background:linear-gradient(to right, #1a3a6a var(--pct), var(--blue-dark) var(--pct));border-color:var(--blue-border);padding:1.4rem 1.5rem;z-index:1;gap:3rem;transition:min-height 1s ease, max-height 1s ease, padding 1s ease, gap 1s ease, background 1s ease, border-color 1s ease;}
+.pr.current.shrinking{padding:.55rem .9rem;gap:.5rem;background:var(--panel);border-color:var(--border2);}
 .pr.current::before{content:'';position:absolute;left:0;top:12%;height:76%;width:3px;background:var(--blue-accent);border-radius:0 3px 3px 0;}
 .pr.eod{background:var(--green-bg);border-color:transparent;}
 .pr.eod.future{border-color:transparent;}
 .pr.eod.current{--pct:0%;background:linear-gradient(to right, #0d3020 var(--pct), #0d2018 var(--pct));border-color:#1e5030;}
 .prt{font-size:var(--row-fs, .72rem);color:var(--text4);white-space:nowrap;}
 .pr.current .prt{color:#5a8bbf;}
-.pr.current .prn{font-size:calc(var(--row-fs, .82rem) * 1.5);}
-.pr.current .pre{font-size:calc(var(--row-fs, .65rem) * 1.5);}
-.pr.current .prt{font-size:calc(var(--row-fs, .72rem) * 1.5);}
+.pr.current .prn{font-size:calc(var(--row-fs, .82rem) * 1.8);}
+.pr.current .pre{font-size:calc(var(--row-fs, .65rem) * 1.8);}
+.pr.current .prt{font-size:calc(var(--row-fs, .72rem) * 1.8);}
 .prn{font-size:var(--row-fs, .82rem);color:var(--text2);white-space:nowrap;overflow:hidden;}
 .pr.current .prn{color:#c8dff5;font-weight:500;}
 .pr.eod .prn{color:var(--green-text);font-style:italic;}
@@ -721,23 +721,28 @@ function renderEmptyState() {
 }
 
 // ── ROW SIZING ────────────────────────────────────────────────
-// Sizes schedule rows based on viewport height rather than row count.
-// This ensures consistent, readable sizes regardless of how many
-// events are in the schedule or what screen it's displayed on.
-// Inactive rows: 5.5% of viewport height
-// Active row: 2x inactive height (handled via CSS padding/max-height)
+// Sizes schedule rows to fill the available schedule list height.
+// Divides available space among all rows, with the active row
+// getting 2x the height of inactive rows.
+// On narrow screens, reduces gap to give the name column more room.
 function sizeRows() {
-  const vh = window.innerHeight;
-
-  // Base row height as a percentage of viewport height
-  const inactiveH = vh * 0.055;
-
-  // Font size is proportional to row height
-  const fs = inactiveH * 0.38;
-
   const list = document.getElementById('sched-list');
   if (!list) return;
   const rows = list.querySelectorAll('.pr');
+  if (!rows.length) return;
+
+  const totalRows = rows.length;
+  const listH = list.getBoundingClientRect().height;
+  const isNarrow = window.innerWidth < 600;
+
+  // Calculate inactive row height:
+  // Active row = 2x inactive, so total = (totalRows - 1) * inactive + 2 * inactive
+  // = (totalRows + 1) * inactive
+  const inactiveH = listH / (totalRows + 1);
+
+  // Font size proportional to inactive row height
+  const fs = inactiveH * 0.38;
+
   rows.forEach(r => {
     r.style.setProperty('--row-fs', fs.toFixed(2) + 'px');
     if (!r.classList.contains('current')) {
@@ -746,10 +751,19 @@ function sizeRows() {
     }
   });
 
-  // Store for use by active row sizing
-  sizeRows._inactiveH = inactiveH;
+  // On narrow screens reduce the active row gap so name column is visible
+  const activeGap = isNarrow ? '0.75rem' : '3rem';
+  const activeRow = list.querySelector('.pr.current');
+  if (activeRow) {
+    activeRow.style.gap = activeGap;
+    activeRow.style.minHeight = (inactiveH * 2).toFixed(2) + 'px';
+    activeRow.style.maxHeight = (inactiveH * 2).toFixed(2) + 'px';
+  }
 
-  // Scroll active period into center
+  // Store inactive height for shrink animation reference
+  sizeRows._inactiveH = inactiveH;
+  sizeRows._activeGap = activeGap;
+
   scrollActivePeriodIntoView();
 }
 
