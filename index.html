@@ -711,13 +711,12 @@ function renderSchedule(list, forceRebuild) {
   return false;
 }
 
-// ── EMPTY STATE ───────────────────────────────────────────────
-// Shown when no schedule is configured for today
-function renderEmptyState() {
-  set('d-daybadge','—');
-  set('d-nowname','No schedule configured');
-  set('d-nowtime','');
-  document.getElementById('sched-list').innerHTML='';
+// Debounced version of sizeRows — prevents multiple rapid calls
+// from causing visible flashing or layout shifts
+let _sizeRowsTimer = null;
+function sizeRowsDebounced() {
+  clearTimeout(_sizeRowsTimer);
+  _sizeRowsTimer = setTimeout(sizeRows, 50);
 }
 
 // Debounced version of sizeRows — prevents multiple rapid calls
