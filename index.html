@@ -743,7 +743,7 @@ function sizeRows() {
     // totalRows - 1 inactive rows + 1 active row (2x) + gaps = listH
     // (totalRows - 1) * inactiveH + 2 * inactiveH + (totalRows - 1) * minGap = listH
     // (totalRows + 1) * inactiveH = listH - (totalRows - 1) * minGap
-    inactiveH = (listH - (totalRows - 1) * minGap) / (totalRows + 1);
+    inactiveH = (listH - (totalRows - 1) * minGap) / (totalRows + 0.5);
     gap = minGap;
   } else {
     // No active period — all rows same size, gaps fill remaining space
@@ -753,7 +753,7 @@ function sizeRows() {
     gap = Math.max(minGap, (listH - totalRowH) / (totalRows - 1));
   }
 
-  const activeH = inactiveH * 2;
+  const activeH = inactiveH * 1.5;
 
   // Font size based on inactive row height
   const fsPx = inactiveH * 0.42;
@@ -768,7 +768,7 @@ function sizeRows() {
       r.style.minHeight = activeH.toFixed(2) + 'px';
       r.style.maxHeight = activeH.toFixed(2) + 'px';
       r.style.setProperty('--row-fs', activeFs);
-      r.style.gap = isNarrow ? '0.5rem' : '3rem';
+      r.style.gap = isNarrow ? '0.5rem' : '1.5rem';
       r.querySelectorAll('.prt, .prn, .pre').forEach(el => el.style.fontSize = activeFs);
     } else {
       r.style.minHeight = inactiveH.toFixed(2) + 'px';
