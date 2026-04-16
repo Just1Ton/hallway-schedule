@@ -59,10 +59,10 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 /* ── SCHEDULE ROW STYLES ──
    Each row (.pr) can be: past, future, current, eod (end of day), or brk (break)
    Current row uses a CSS gradient that updates via --pct custom property */
-.pr{display:grid;grid-template-columns:minmax(0,8rem) 1fr minmax(0,7.5rem);align-items:center;gap:.5rem;padding:.55rem .9rem;border-radius:10px;border:0.5px solid transparent;position:relative;flex:1;min-height:2.5rem;max-height:8rem;overflow:hidden;}.pr.past{opacity:.18;background:var(--bg);filter:saturate(0);}
+.pr{display:grid;grid-template-columns:minmax(0,8rem) 1fr minmax(0,7.5rem);align-items:center;gap:.5rem;padding:.55rem .9rem;border-radius:10px;border:0.5px solid transparent;position:relative;overflow:hidden;transition:min-height 1s ease, max-height 1s ease;}.pr.past{opacity:.18;background:var(--bg);filter:saturate(0);}
 .pr.future{background:var(--panel);border-color:var(--border2);}
-.pr.current{--pct:0%;background:linear-gradient(to right, #1a3a6a var(--pct), var(--blue-dark) var(--pct));border-color:var(--blue-border);padding:1.4rem 1.5rem;z-index:1;max-height:12rem;gap:3rem;transition:padding 1s ease, max-height 1s ease, gap 1s ease, background 1s ease, border-color 1s ease;}
-.pr.current.shrinking{padding:.55rem .9rem;max-height:8rem;gap:.5rem;background:var(--panel);border-color:var(--border2);}
+.pr.current{--pct:0%;background:linear-gradient(to right, #1a3a6a var(--pct), var(--blue-dark) var(--pct));border-color:var(--blue-border);padding:1.4rem 1.5rem;z-index:1;min-height:11vh;max-height:11vh;gap:3rem;transition:min-height 1s ease, max-height 1s ease, padding 1s ease, gap 1s ease, background 1s ease, border-color 1s ease;}
+.pr.current.shrinking{padding:.55rem .9rem;min-height:5.5vh;max-height:5.5vh;gap:.5rem;background:var(--panel);border-color:var(--border2);}
 .pr.current::before{content:'';position:absolute;left:0;top:12%;height:76%;width:3px;background:var(--blue-accent);border-radius:0 3px 3px 0;}
 .pr.eod{background:var(--green-bg);border-color:transparent;}
 .pr.eod.future{border-color:transparent;}
@@ -553,8 +553,9 @@ function renderCardTick() {
   if (justSwitched) {
     _lastActiveIdx = -2;
     renderDisplay();
-    // After rebuild, start the grow animation by briefly applying shrinking class
+    // After rebuild, start the grow animation and scroll into view
     setTimeout(() => {
+      sizeRows();
       const curRow = document.querySelector('.pr.current');
       if (!curRow) return;
       curRow.classList.add('shrinking');
@@ -719,27 +720,56 @@ function renderEmptyState() {
   document.getElementById('sched-list').innerHTML='';
 }
 
-// ── SCALE ROW TEXT ────────────────────────────────────────────
-// Dynamically scales the font size of schedule rows to fit the available height.
-// Ensures time columns don't overflow regardless of screen size.
-function scaleRowText() {
+// ── ROW SIZING ────────────────────────────────────────────────
+// Sizes schedule rows based on viewport height rather than row count.
+// This ensures consistent, readable sizes regardless of how many
+// events are in the schedule or what screen it's displayed on.
+// Inactive rows: 5.5% of viewport height
+// Active row: 2x inactive height (handled via CSS padding/max-height)
+function sizeRows() {
+  const vh = window.innerHeight;
+
+  // Base row height as a percentage of viewport height
+  const inactiveH = vh * 0.055;
+
+  // Font size is proportional to row height
+  const fs = inactiveH * 0.38;
+
   const list = document.getElementById('sched-list');
   if (!list) return;
   const rows = list.querySelectorAll('.pr');
-  if (!rows.length) return;
-  const base = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const rowH = rows[0].getBoundingClientRect().height;
-  let fsPx = Math.min(Math.max(rowH * 0.35, base * 0.65), base * 1.5);
-  const firstRow = rows[0];
-  const timeEl = firstRow.querySelector('.prt');
-  if (timeEl) {
-    const colW = timeEl.offsetWidth;
-    const neededPx = fsPx * 0.62 * 8;
-    if (neededPx > colW && colW > 0) fsPx = (colW / (0.62 * 8)) * 0.9;
-    fsPx = Math.min(Math.max(fsPx, base * 0.65), base * 1.5);
-  }
-  const fs = (fsPx / base).toFixed(3) + 'rem';
-  rows.forEach(r => r.style.setProperty('--row-fs', fs));
+  rows.forEach(r => {
+    r.style.setProperty('--row-fs', fs.toFixed(2) + 'px');
+    if (!r.classList.contains('current')) {
+      r.style.minHeight = inactiveH.toFixed(2) + 'px';
+      r.style.maxHeight = inactiveH.toFixed(2) + 'px';
+    }
+  });
+
+  // Store for use by active row sizing
+  sizeRows._inactiveH = inactiveH;
+
+  // Scroll active period into center
+  scrollActivePeriodIntoView();
+}
+
+// ── AUTO SCROLL ───────────────────────────────────────────────
+// Scrolls the schedule list so the active period is centered
+// in the visible area. Called after row sizing and on period change.
+function scrollActivePeriodIntoView() {
+  const list = document.getElementById('sched-list');
+  if (!list) return;
+  const curRow = list.querySelector('.pr.current');
+  if (!curRow) return;
+
+  // Calculate the scroll position that centers the active row
+  const listRect = list.getBoundingClientRect();
+  const rowRect = curRow.getBoundingClientRect();
+  const rowCenter = rowRect.top - listRect.top + rowRect.height / 2;
+  const listCenter = listRect.height / 2;
+  const targetScroll = list.scrollTop + rowCenter - listCenter;
+
+  list.scrollTo({ top: targetScroll, behavior: 'smooth' });
 }
 
 // ── INITIALIZATION AND INTERVALS ──────────────────────────────
@@ -759,8 +789,8 @@ setInterval(renderDisplay, 10000);
 setInterval(loadFromSupabase, 60000);
 
 // Rebuild display on window resize or orientation change
-window.addEventListener('resize', () => { _lastActiveIdx = -2; renderDisplay(); setTimeout(scaleRowText, 50); });
-window.addEventListener('orientationchange', () => { _lastActiveIdx = -2; renderDisplay(); setTimeout(scaleRowText, 100); });
+window.addEventListener('resize', () => { _lastActiveIdx = -2; renderDisplay(); setTimeout(sizeRows, 50);});
+window.addEventListener('orientationchange', () => { _lastActiveIdx = -2; renderDisplay(); setTimeout(sizeRows, 100); });
 </script>
 </body>
 </html>
