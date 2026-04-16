@@ -734,20 +734,24 @@ function sizeRows() {
   const isNarrow = window.innerWidth < 600;
   const vh = window.innerHeight;
 
-  // Inactive row height: 6.5% of viewport height
-  const inactiveH = vh * 0.065;
+  // Inactive row height: 7% of viewport height
+  const inactiveH = Math.max(36, vh * 0.07);
 
   // Font size proportional to row height
   const fs = inactiveH * 0.38;
 
-  // Gap between rows fills remaining space
+  // Gap between rows
   const listH = list.getBoundingClientRect().height;
   const totalRowH = rows.length * inactiveH;
-  const gap = Math.max(6, (listH - totalRowH) / (rows.length - 1));
+  const gap = Math.max(6, (listH - totalRowH) / Math.max(rows.length - 1, 1));
   list.style.gap = gap.toFixed(2) + 'px';
 
   rows.forEach(r => {
+    // Apply font size directly as inline style as well as CSS variable
     r.style.setProperty('--row-fs', fs.toFixed(2) + 'px');
+    r.querySelectorAll('.prt, .prn, .pre').forEach(el => {
+      el.style.fontSize = fs.toFixed(2) + 'px';
+    });
     if (!r.classList.contains('current')) {
       r.style.minHeight = inactiveH.toFixed(2) + 'px';
       r.style.maxHeight = inactiveH.toFixed(2) + 'px';
@@ -761,15 +765,12 @@ function sizeRows() {
     activeRow.style.minHeight = activeH.toFixed(2) + 'px';
     activeRow.style.maxHeight = activeH.toFixed(2) + 'px';
 
-    if (isNarrow) {
-      // Phone: keep font small enough to show period name, reduce gap
-      activeRow.style.gap = '0.5rem';
-      activeRow.style.setProperty('--row-fs', (fs * 1.1).toFixed(2) + 'px');
-    } else {
-      // Large screen: bigger font for readability at distance
-      activeRow.style.gap = '3rem';
-      activeRow.style.setProperty('--row-fs', (fs * 2).toFixed(2) + 'px');
-    }
+    const activeFontSize = isNarrow ? fs * 1.1 : fs * 2;
+    activeRow.style.gap = isNarrow ? '0.5rem' : '3rem';
+    activeRow.style.setProperty('--row-fs', activeFontSize.toFixed(2) + 'px');
+    activeRow.querySelectorAll('.prt, .prn, .pre').forEach(el => {
+      el.style.fontSize = activeFontSize.toFixed(2) + 'px';
+    });
   }
 
   sizeRows._inactiveH = inactiveH;
