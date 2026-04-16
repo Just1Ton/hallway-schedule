@@ -179,7 +179,7 @@ html, body {
    The active row gets more height via padding which pushes other rows smaller. */
 .pr {
   display: grid;
-  grid-template-columns: minmax(0, 7rem) 1fr minmax(0, 7rem);
+  grid-template-columns: minmax(0, 5.5rem) 1fr minmax(0, 5.5rem);
   align-items: center;
   gap: .5rem;
   padding: 0 .9rem;
@@ -365,6 +365,9 @@ html, body {
   .pr.current .prn { font-size: clamp(.9rem, 4.5vw, 1.4rem); }
   .pr.current { padding: .75rem .9rem; }
   .pr.current.shrinking { padding: 0 .9rem; }
+  .pr {
+    grid-template-columns: minmax(0, 4.5rem) 1fr minmax(0, 4.5rem);
+  }
 }
 
 /* ── LOADING SCREEN ── */
