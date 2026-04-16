@@ -61,8 +61,8 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
    Current row uses a CSS gradient that updates via --pct custom property */
 .pr{display:grid;grid-template-columns:minmax(0,8rem) 1fr minmax(0,7.5rem);align-items:center;gap:.5rem;padding:.55rem .9rem;border-radius:10px;border:0.5px solid transparent;position:relative;flex:1;min-height:2.5rem;max-height:8rem;overflow:hidden;}.pr.past{opacity:.18;background:var(--bg);filter:saturate(0);}
 .pr.future{background:var(--panel);border-color:var(--border2);}
-.pr.current{--pct:0%;background:linear-gradient(to right, #1a3a6a var(--pct), var(--blue-dark) var(--pct));border-color:var(--blue-border);padding:1.4rem 1.5rem;z-index:1;max-height:12rem;gap:3rem;transition:padding .8s ease, max-height .8s ease, gap .8s ease;}.pr.current.growing{padding:.55rem .9rem;max-height:8rem;gap:.5rem;}
-.pr.current.shrinking{padding:.55rem .9rem;max-height:8rem;gap:.5rem;}
+.pr.current{--pct:0%;background:linear-gradient(to right, #1a3a6a var(--pct), var(--blue-dark) var(--pct));border-color:var(--blue-border);padding:1.4rem 1.5rem;z-index:1;max-height:12rem;gap:3rem;transition:padding 1s ease, max-height 1s ease, gap 1s ease, background 1s ease, border-color 1s ease;}
+.pr.current.shrinking{padding:.55rem .9rem;max-height:8rem;gap:.5rem;background:var(--panel);border-color:var(--border2);}
 .pr.current::before{content:'';position:absolute;left:0;top:12%;height:76%;width:3px;background:var(--blue-accent);border-radius:0 3px 3px 0;}
 .pr.eod{background:var(--green-bg);border-color:transparent;}
 .pr.eod.future{border-color:transparent;}
@@ -515,49 +515,59 @@ function renderDisplay() {
 }
 
 // ── CARD TICK ─────────────────────────────────────────────────
-// Called every second to keep the progress bar smooth and show
-// a seconds countdown in the last minute of any period or passing time.
-// Only updates the card elements — does not rebuild the schedule list.
-function renderCardTick() {function renderCardTick() {
+// Called every second to keep the progress bar smooth, show
+// seconds countdown, and handle grow/shrink animations on
+// the active period row.
+function renderCardTick() {
   const active = getActiveSchedule();
   if (!active) return;
   const { blocks, eod } = active;
   const list = buildList(blocks, eod);
   if (!list || !list.length) return;
+
+  const now = nowM();
+
+  // Find the currently active period
+  let curIdx = -1;
+  for (let i = 0; i < list.length; i++) {
+    if (now >= t2m(list[i].start) && now < t2m(list[i].end)) { curIdx = i; break; }
+  }
+
+  // If no active period, force a full display rebuild immediately
+  // This ensures the row stops being highlighted the moment a period ends
+  if (curIdx === -1) {
+    _lastActiveIdx = -2;
+    renderDisplay();
+    return;
+  }
+
   renderCard(list);
 
   // Handle grow/shrink animation on the active row
-  const now = nowM();
   const curRow = document.querySelector('.pr.current');
   if (!curRow) return;
 
-  const idx = parseInt(curRow.dataset.idx);
-  if (isNaN(idx) || !list[idx]) return;
-
-  const p = list[idx];
+  const p = list[curIdx];
   const s = t2m(p.start);
   const e = t2m(p.end);
   const elapsed = (now - s) * 60;   // seconds since period started
   const remaining = (e - now) * 60; // seconds until period ends
 
   if (elapsed <= 1) {
-    // First second — start small and grow to full size
-    curRow.classList.add('growing');
-    setTimeout(() => curRow.classList.remove('growing'), 50);
+    // First second — apply shrinking class then immediately remove it
+    // so the transition animates from small to large
+    curRow.classList.add('shrinking');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        curRow.classList.remove('shrinking');
+      });
+    });
   } else if (remaining <= 1) {
-    // Last second — shrink back to inactive size
+    // Last second — add shrinking class to animate back to inactive size and color
     curRow.classList.add('shrinking');
   } else {
-    curRow.classList.remove('growing');
     curRow.classList.remove('shrinking');
   }
-}
-  const active = getActiveSchedule();
-  if (!active) return;
-  const { blocks, eod } = active;
-  const list = buildList(blocks, eod);
-  if (!list || !list.length) return;
-  renderCard(list);
 }
 
 // ── NOW CARD RENDER ───────────────────────────────────────────
