@@ -721,60 +721,58 @@ function renderEmptyState() {
 }
 
 // ── ROW SIZING ────────────────────────────────────────────────
-// Sizes schedule rows to fill the available schedule list height.
-// Distributes remaining space as padding between rows so the
-// schedule always fills the full available area.
+// Sizes schedule rows based on viewport height.
+// Inactive rows are a fixed percentage of viewport height.
+// Rows are spaced evenly to spread across the schedule area.
+// Active row is larger with bigger font on wide screens.
 function sizeRows() {
   const list = document.getElementById('sched-list');
   if (!list) return;
   const rows = list.querySelectorAll('.pr');
   if (!rows.length) return;
 
-  const totalRows = rows.length;
-  const listH = list.getBoundingClientRect().height;
   const isNarrow = window.innerWidth < 600;
+  const vh = window.innerHeight;
 
-  // Active row = 2x inactive height
-  // Total height = (totalRows - 1) * inactiveH + 2 * inactiveH = (totalRows + 1) * inactiveH
-  const inactiveH = listH / (totalRows + 1);
-  const activeH = inactiveH * 2;
+  // Inactive row height: 6.5% of viewport height
+  const inactiveH = vh * 0.065;
 
-  // Calculate gap between rows to fill remaining space
-  const totalRowHeight = (totalRows - 1) * inactiveH + activeH;
-  const remainingSpace = listH - totalRowHeight - (list.style.padding ? parseFloat(list.style.padding) * 2 : 32);
-  const gap = Math.max(4, remainingSpace / (totalRows - 1));
+  // Font size proportional to row height
+  const fs = inactiveH * 0.38;
 
-  // Apply gap to list
+  // Gap between rows fills remaining space
+  const listH = list.getBoundingClientRect().height;
+  const totalRowH = rows.length * inactiveH;
+  const gap = Math.max(6, (listH - totalRowH) / (rows.length - 1));
   list.style.gap = gap.toFixed(2) + 'px';
 
-  // Font size proportional to inactive row height
-  const fs = inactiveH * 0.42;
-
   rows.forEach(r => {
-    // Cap font size on narrow screens to prevent overflow
-    const rowFs = isNarrow ? Math.min(fs, 13) : fs;
-    r.style.setProperty('--row-fs', rowFs.toFixed(2) + 'px');
+    r.style.setProperty('--row-fs', fs.toFixed(2) + 'px');
     if (!r.classList.contains('current')) {
       r.style.minHeight = inactiveH.toFixed(2) + 'px';
       r.style.maxHeight = inactiveH.toFixed(2) + 'px';
     }
   });
 
-  // Active row sizing
+  // Active row
   const activeRow = list.querySelector('.pr.current');
   if (activeRow) {
-    // On narrow screens: smaller gap and capped font size so name is visible
-    const activeGap = isNarrow ? '0.5rem' : '3rem';
-    const activeFontMultiplier = isNarrow ? 1.2 : 1.8;
-    activeRow.style.gap = activeGap;
+    const activeH = inactiveH * 2;
     activeRow.style.minHeight = activeH.toFixed(2) + 'px';
     activeRow.style.maxHeight = activeH.toFixed(2) + 'px';
-    activeRow.style.setProperty('--row-fs', (isNarrow ? Math.min(fs * activeFontMultiplier, 14) : fs * activeFontMultiplier).toFixed(2) + 'px');
+
+    if (isNarrow) {
+      // Phone: keep font small enough to show period name, reduce gap
+      activeRow.style.gap = '0.5rem';
+      activeRow.style.setProperty('--row-fs', (fs * 1.1).toFixed(2) + 'px');
+    } else {
+      // Large screen: bigger font for readability at distance
+      activeRow.style.gap = '3rem';
+      activeRow.style.setProperty('--row-fs', (fs * 2).toFixed(2) + 'px');
+    }
   }
 
   sizeRows._inactiveH = inactiveH;
-  sizeRows._activeGap = isNarrow ? '0.5rem' : '3rem';
-
   scrollActivePeriodIntoView();
 }
 
