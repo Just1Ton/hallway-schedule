@@ -69,9 +69,9 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .pr.eod.current{--pct:0%;background:linear-gradient(to right, #0d3020 var(--pct), #0d2018 var(--pct));border-color:#1e5030;}
 .prt{font-size:var(--row-fs, .72rem);color:var(--text4);white-space:nowrap;}
 .pr.current .prt{color:#5a8bbf;}
-.pr.current .prn{font-size:calc(var(--row-fs, .82rem) * 1.8);}
-.pr.current .pre{font-size:calc(var(--row-fs, .65rem) * 1.8);}
-.pr.current .prt{font-size:calc(var(--row-fs, .72rem) * 1.8);}
+.pr.current .prn{font-size:var(--row-fs, .82rem);}
+.pr.current .pre{font-size:var(--row-fs, .65rem);}
+.pr.current .prt{font-size:var(--row-fs, .72rem);}
 .prn{font-size:var(--row-fs, .82rem);color:var(--text2);white-space:nowrap;overflow:hidden;}
 .pr.current .prn{color:#c8dff5;font-weight:500;}
 .pr.eod .prn{color:var(--green-text);font-style:italic;}
@@ -722,9 +722,8 @@ function renderEmptyState() {
 
 // ── ROW SIZING ────────────────────────────────────────────────
 // Sizes schedule rows to fill the available schedule list height.
-// Divides available space among all rows, with the active row
-// getting 2x the height of inactive rows.
-// On narrow screens, reduces gap to give the name column more room.
+// Distributes remaining space as padding between rows so the
+// schedule always fills the full available area.
 function sizeRows() {
   const list = document.getElementById('sched-list');
   if (!list) return;
@@ -735,34 +734,46 @@ function sizeRows() {
   const listH = list.getBoundingClientRect().height;
   const isNarrow = window.innerWidth < 600;
 
-  // Calculate inactive row height:
-  // Active row = 2x inactive, so total = (totalRows - 1) * inactive + 2 * inactive
-  // = (totalRows + 1) * inactive
+  // Active row = 2x inactive height
+  // Total height = (totalRows - 1) * inactiveH + 2 * inactiveH = (totalRows + 1) * inactiveH
   const inactiveH = listH / (totalRows + 1);
+  const activeH = inactiveH * 2;
+
+  // Calculate gap between rows to fill remaining space
+  const totalRowHeight = (totalRows - 1) * inactiveH + activeH;
+  const remainingSpace = listH - totalRowHeight - (list.style.padding ? parseFloat(list.style.padding) * 2 : 32);
+  const gap = Math.max(4, remainingSpace / (totalRows - 1));
+
+  // Apply gap to list
+  list.style.gap = gap.toFixed(2) + 'px';
 
   // Font size proportional to inactive row height
-  const fs = inactiveH * 0.38;
+  const fs = inactiveH * 0.42;
 
   rows.forEach(r => {
-    r.style.setProperty('--row-fs', fs.toFixed(2) + 'px');
+    // Cap font size on narrow screens to prevent overflow
+    const rowFs = isNarrow ? Math.min(fs, 13) : fs;
+    r.style.setProperty('--row-fs', rowFs.toFixed(2) + 'px');
     if (!r.classList.contains('current')) {
       r.style.minHeight = inactiveH.toFixed(2) + 'px';
       r.style.maxHeight = inactiveH.toFixed(2) + 'px';
     }
   });
 
-  // On narrow screens reduce the active row gap so name column is visible
-  const activeGap = isNarrow ? '0.75rem' : '3rem';
+  // Active row sizing
   const activeRow = list.querySelector('.pr.current');
   if (activeRow) {
+    // On narrow screens: smaller gap and capped font size so name is visible
+    const activeGap = isNarrow ? '0.5rem' : '3rem';
+    const activeFontMultiplier = isNarrow ? 1.2 : 1.8;
     activeRow.style.gap = activeGap;
-    activeRow.style.minHeight = (inactiveH * 2).toFixed(2) + 'px';
-    activeRow.style.maxHeight = (inactiveH * 2).toFixed(2) + 'px';
+    activeRow.style.minHeight = activeH.toFixed(2) + 'px';
+    activeRow.style.maxHeight = activeH.toFixed(2) + 'px';
+    activeRow.style.setProperty('--row-fs', (isNarrow ? Math.min(fs * activeFontMultiplier, 14) : fs * activeFontMultiplier).toFixed(2) + 'px');
   }
 
-  // Store inactive height for shrink animation reference
   sizeRows._inactiveH = inactiveH;
-  sizeRows._activeGap = activeGap;
+  sizeRows._activeGap = isNarrow ? '0.5rem' : '3rem';
 
   scrollActivePeriodIntoView();
 }
