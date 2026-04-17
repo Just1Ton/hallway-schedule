@@ -733,7 +733,8 @@ function renderDisplay() {
     renderClock('ns');
     set('ns-school', S.schoolName);
     set('ns-title', 'School Day Complete');
-    set('ns-sub', 'See you tomorrow!');
+    const isFriday = new Date().getDay() === 5;
+    set('ns-sub', isFriday ? 'See you next week!' : 'See you tomorrow!');
     return;
   }
 
