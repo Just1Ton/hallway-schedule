@@ -783,10 +783,20 @@ function renderCard(list) {
   if (idx===-1) {
     const first=t2m(list[0].start), last=t2m(list[list.length-1].end);
     if (now<first) {
-      nn.textContent='School not yet started';
-      nt.textContent='Starts at '+fmt(list[0].start);
-      nl.textContent='Upcoming';
-      pb.style.width='0%'; pr.textContent='';
+      const minsUntil = first - now;
+      const totalSecs = Math.ceil(minsUntil * 60);
+      const hrs = Math.floor(totalSecs / 3600);
+      const mins = Math.floor((totalSecs % 3600) / 60);
+      const secs = totalSecs % 60;
+      let countdown = 'Starts in ';
+      if (hrs > 0) countdown += hrs + ' hr' + (hrs !== 1 ? 's' : '') + ', ';
+      if (hrs > 0 || mins > 0) countdown += mins + ' min' + (mins !== 1 ? 's' : '') + ', ';
+      countdown += secs + 's';
+      nl.textContent = 'Upcoming';
+      nn.textContent = list[0].name;
+      nt.textContent = 'Starts at ' + fmt(list[0].start);
+      pb.style.width = '0%';
+      pr.textContent = countdown;
     } else if (now>=last) {
       nn.textContent='School day complete';
       nt.textContent='See you tomorrow!';
