@@ -722,6 +722,21 @@ function renderDisplay() {
   const { blocks, eod, label, isOverride, isWad, dayIdx } = active;
   const list = buildList(blocks, eod);
 
+  // Show end-of-day screen 5 minutes after the last period ends
+  const now = nowM();
+  const lastEnd = t2m(list[list.length - 1].end);
+  if (now >= lastEnd + 5) {
+    // Switch to no-school style screen with end-of-day message
+    document.getElementById('display-screen').style.display = 'none';
+    const nsEl = document.getElementById('noschool-screen');
+    nsEl.classList.add('visible');
+    renderClock('ns');
+    set('ns-school', S.schoolName);
+    set('ns-title', 'School Day Complete');
+    set('ns-sub', 'See you tomorrow!');
+    return;
+  }
+
   set('d-daybadge', isOverride || isWad ? label : getDayName(dayIdx));
   set('d-override-label', isOverride || isWad ? label + ' Schedule' : getDayName(dayIdx) + ' Schedule');
 
