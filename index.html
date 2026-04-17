@@ -727,7 +727,7 @@ function renderDisplay() {
   const lastEnd = t2m(list[list.length - 1].end);
 
   // Show good morning countdown screen before school starts
-  if (now < firstStart) {
+  if (now < firstStart - 45) {
     document.getElementById('display-screen').style.display = 'none';
     const nsEl = document.getElementById('noschool-screen');
     nsEl.classList.add('visible');
