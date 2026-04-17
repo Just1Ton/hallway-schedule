@@ -722,11 +722,32 @@ function renderDisplay() {
   const { blocks, eod, label, isOverride, isWad, dayIdx } = active;
   const list = buildList(blocks, eod);
 
-  // Show end-of-day screen 5 minutes after the last period ends
   const now = nowM();
+  const firstStart = t2m(list[0].start);
   const lastEnd = t2m(list[list.length - 1].end);
+
+  // Show good morning countdown screen before school starts
+  if (now < firstStart) {
+    document.getElementById('display-screen').style.display = 'none';
+    const nsEl = document.getElementById('noschool-screen');
+    nsEl.classList.add('visible');
+    renderClock('ns');
+    set('ns-school', S.schoolName);
+    set('ns-title', 'Good Morning');
+    const totalSecsRemaining = Math.ceil((firstStart - now) * 60);
+    const hrs = Math.floor(totalSecsRemaining / 3600);
+    const mins = Math.floor((totalSecsRemaining % 3600) / 60);
+    const secs = totalSecsRemaining % 60;
+    let countdown = 'School starts in ';
+    if (hrs > 0) countdown += hrs + ' hour' + (hrs !== 1 ? 's' : '') + ', ';
+    if (hrs > 0 || mins > 0) countdown += mins + ' minute' + (mins !== 1 ? 's' : '') + ', ';
+    countdown += secs + ' second' + (secs !== 1 ? 's' : '');
+    set('ns-sub', countdown);
+    return;
+  }
+
+  // Show end-of-day screen 5 minutes after the last period ends
   if (now >= lastEnd + 5) {
-    // Switch to no-school style screen with end-of-day message
     document.getElementById('display-screen').style.display = 'none';
     const nsEl = document.getElementById('noschool-screen');
     nsEl.classList.add('visible');
@@ -927,6 +948,27 @@ function renderCardTick() {
     curRow.classList.add('shrinking');
   } else {
     curRow.classList.remove('shrinking');
+  }
+// Update good morning countdown every second
+  const nsEl = document.getElementById('noschool-screen');
+  if (nsEl.classList.contains('visible')) {
+    const active2 = getActiveSchedule();
+    if (active2) {
+      const list2 = buildList(active2.blocks, active2.eod);
+      const firstStart2 = t2m(list2[0].start);
+      const now2 = nowM();
+      if (now2 < firstStart2) {
+        const totalSecsRemaining = Math.ceil((firstStart2 - now2) * 60);
+        const hrs = Math.floor(totalSecsRemaining / 3600);
+        const mins = Math.floor((totalSecsRemaining % 3600) / 60);
+        const secs = totalSecsRemaining % 60;
+        let countdown = 'School starts in ';
+        if (hrs > 0) countdown += hrs + ' hour' + (hrs !== 1 ? 's' : '') + ', ';
+        if (hrs > 0 || mins > 0) countdown += mins + ' minute' + (mins !== 1 ? 's' : '') + ', ';
+        countdown += secs + ' second' + (secs !== 1 ? 's' : '');
+        set('ns-sub', countdown);
+      }
+    }
   }
 }
 renderCardTick._wasActive = false;
