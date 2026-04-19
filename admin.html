@@ -447,8 +447,9 @@ async function loadUsers() {
       + '<button class="btn-view" onclick="impersonateUser(\'' + profile.school_id + '\')" style="cursor:pointer;">View as</button>'
       + '<button class="btn-danger" onclick="removeUser(\'' + profile.id + '\')">Remove</button>'
       + '</td>';
+    tbody.appendChild(tr);
   });
-}
+  }
 
 // Creates a new school admin account in Supabase Auth and user_profiles
 async function addSchoolAdmin() {
