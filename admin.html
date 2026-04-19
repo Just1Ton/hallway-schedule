@@ -431,6 +431,8 @@ async function loadUsers() {
   const tbody = document.getElementById('users-tbody');
   tbody.innerHTML = '';
 
+  console.log('profiles:', JSON.stringify(profiles));
+  console.log('profiles error would be above');
   if (!profiles || profiles.length === 0) {
     tbody.innerHTML = '<tr><td colspan="4" style="color:var(--text4);font-size:.72rem;">No school admins yet.</td></tr>';
     return;
