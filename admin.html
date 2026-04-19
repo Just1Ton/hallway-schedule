@@ -361,6 +361,11 @@ async function init() {
   }
 }
 
+// Opens the school admin page impersonating the selected school
+function impersonateUser(schoolId) {
+  window.open('/school-admin.html?impersonate=' + schoolId, '_blank');
+}
+
 // Signs out the current user and redirects to login
 async function signOut() {
   await db.auth.signOut();
@@ -438,7 +443,10 @@ async function loadUsers() {
     tr.innerHTML = '<td>' + (authUser?.email || '—') + '</td>'
       + '<td>' + (school?.name || '—') + '</td>'
       + '<td><span class="badge badge-school">school admin</span></td>'
-      + '<td><button class="btn-danger" onclick="removeUser(\'' + profile.id + '\')">Remove</button></td>';
+      + '<td style="display:flex;gap:.5rem;">'
+      + '<button class="btn-view" onclick="impersonateUser(\'' + profile.school_id + '\')" style="cursor:pointer;">View as</button>'
+      + '<button class="btn-danger" onclick="removeUser(\'' + profile.id + '\')">Remove</button>'
+      + '</td>';
     tbody.appendChild(tr);
   });
 }

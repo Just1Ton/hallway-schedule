@@ -100,6 +100,13 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 <div id="loading"><div class="loading-text">Loading...</div></div>
 
 <div id="app">
+  <!-- Impersonation banner — only shown when superadmin is viewing as a school admin -->
+  <div id="impersonate-banner" style="display:none;background:#2a1a00;border-bottom:0.5px solid #3a2a00;padding:.6rem 2rem;align-items:center;justify-content:space-between;">
+    <div style="font-size:.74rem;color:#f7c87e;">
+      ⚠ You are viewing this page as a school admin — changes you make here will affect their data.
+    </div>
+    <button onclick="window.close()" style="background:transparent;border:0.5px solid #3a2a00;border-radius:6px;color:#f7c87e;font-family:'DM Mono',monospace;font-size:.7rem;padding:.28rem .7rem;cursor:pointer;">Close tab</button>
+  </div>
   <!-- Top navigation bar with school name and sign out -->
   <div class="topbar">
     <div class="topbar-left">
@@ -195,21 +202,32 @@ async function init() {
     const { data: { session } } = await db.auth.getSession();
     if (!session) { window.location.href = '/login.html'; return; }
 
-    // Load user profile to verify role and get assigned school
     const { data: profile } = await db
       .from('user_profiles')
       .select('role, school_id')
       .eq('id', session.user.id)
       .single();
 
-    // Only schooladmin role is allowed here — superadmins use admin.html
-    if (!profile || profile.role !== 'schooladmin') {
+    if (!profile) { window.location.href = '/login.html'; return; }
+
+    // Check for impersonation mode — only superadmins can impersonate
+    const params = new URLSearchParams(window.location.search);
+    const impersonateSchoolId = params.get('impersonate');
+
+    if (impersonateSchoolId && profile.role === 'superadmin') {
+      // Impersonation mode — load the specified school's data
+      schoolId = impersonateSchoolId;
+      document.getElementById('user-email').textContent = session.user.email;
+      // Show impersonation banner
+      document.getElementById('impersonate-banner').style.display = 'flex';
+    } else if (profile.role === 'schooladmin') {
+      // Normal school admin login
+      schoolId = profile.school_id;
+      document.getElementById('user-email').textContent = session.user.email;
+    } else {
       window.location.href = '/login.html';
       return;
     }
-
-    schoolId = profile.school_id;
-    document.getElementById('user-email').textContent = session.user.email;
 
     await loadData();
     document.getElementById('loading').style.display = 'none';
