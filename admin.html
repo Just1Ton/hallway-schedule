@@ -294,7 +294,13 @@ const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 // adminDb: service role client for creating/deleting auth users
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const adminDb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+const adminDb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+    detectSessionInUrl: false
+  }
+});
 
 // ── DEFAULT DATA ──────────────────────────────────────────────
 // Used when creating a new school or adding a new rotation day
