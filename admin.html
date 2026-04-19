@@ -421,10 +421,11 @@ async function deleteSchool(schoolId, name) {
 // ── USERS ─────────────────────────────────────────────────────
 // Loads all school admin accounts and renders the users table
 async function loadUsers() {
-  const { data: profiles } = await adminDb
+  const { data: profiles, error: profilesError } = await adminDb
     .from('user_profiles')
     .select('id, role, school_id')
     .eq('role', 'schooladmin');
+  console.log('profilesError:', JSON.stringify(profilesError));
 
   const { data: authUsers } = await adminDb.auth.admin.listUsers();
 
