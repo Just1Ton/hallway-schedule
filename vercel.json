@@ -1,16 +1,8 @@
 {
   "redirects": [
     {
-      "source": "/maret",
-      "destination": "/index.html?school=maret"
-    },
-    {
-      "source": "/ludus",
-      "destination": "/index.html?school=ludus"
-    },
-    {
-      "source": "/gv",
-      "destination": "/index.html?school=gv"
+      "source": "/:slug([^.]+)",
+      "destination": "/index.html?school=:slug"
     }
   ]
 }
