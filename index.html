@@ -517,7 +517,7 @@ const DEFAULT_EOD = {name:"School day ends", end:"15:10", show:false};
 async function loadFromSupabase() {
   const { data: schoolData, error: schoolError } = await db
     .from('schools')
-    .select('id, name')
+    .select('id, name, theme')
     .eq('slug', SCHOOL_SLUG)
     .single();
 
@@ -536,6 +536,7 @@ async function loadFromSupabase() {
 
   const saved = schedData?.data || {};
   S.schoolName = schoolData.name;
+  if (schoolData.theme && schoolData.theme.accent) applyTheme(schoolData.theme);
   S.rotLen = saved.rotLen || 5;
   S.rotMode = saved.rotMode || 'calendar';
   S.anchor = saved.anchor || null;
@@ -962,6 +963,16 @@ function renderCardTick() {
 }
 renderCardTick._wasActive = false;
 renderCardTick._lastCurIdx = -1;
+
+function applyTheme(theme) {
+  const root = document.documentElement;
+  if (theme.accent) root.style.setProperty('--blue-accent', theme.accent);
+  if (theme.dark) root.style.setProperty('--blue-dark', theme.dark);
+  if (theme.darkPanel) root.style.setProperty('--blue-bg', theme.darkPanel);
+  if (theme.border) root.style.setProperty('--blue-border', theme.border);
+  if (theme.mid) root.style.setProperty('--blue-mid', theme.mid);
+  if (theme.dim) root.style.setProperty('--blue-dim', theme.dim);
+}
 
 // ── INITIALIZATION ────────────────────────────────────────────
 loadFromSupabase();
