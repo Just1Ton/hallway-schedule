@@ -525,6 +525,13 @@ function applyTheme(theme) {
   root.style.setProperty('--panel2',  hsl(h, 18, 8));
   root.style.setProperty('--border',  hsl(h, 18, 20));
   root.style.setProperty('--border2', hsl(h, 18, 15));
+
+  // Muted text colors — used for labels, dates, inactive times, break names.
+  // These were bluish-gray in the original palette, so we tint them to match the hue.
+  root.style.setProperty('--muted',  hsl(h, 20, 63));
+  root.style.setProperty('--text2',  hsl(h, 20, 67));
+  root.style.setProperty('--text3',  hsl(h, 18, 51));
+  root.style.setProperty('--text4',  hsl(h, 22, 40));
 }
 
 async function loadFromSupabase() {
