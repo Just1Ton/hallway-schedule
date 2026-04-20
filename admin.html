@@ -451,6 +451,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// Opens the school admin page impersonating the selected school
+function impersonateUser(schoolId) {
   window.open('/school-admin.html?impersonate=' + schoolId, '_blank');
 }
 
@@ -1382,6 +1385,7 @@ function showSuccess() {
 
 // ── START ─────────────────────────────────────────────────────
 init();
+</script>
 
 <!-- ── MODAL: School customization ── -->
 <div id="customize-overlay" style="display:none;position:fixed;inset:0;background:rgba(5,8,18,.92);z-index:100;overflow-y:auto;padding:1.5rem;">
@@ -1416,6 +1420,6 @@ init();
     </div>
   </div>
 </div>
-</script>
+
 </body>
 </html>
