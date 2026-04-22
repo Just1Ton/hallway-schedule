@@ -541,6 +541,7 @@ function applyTheme(theme) {
   root.style.setProperty('--text2',       slots.text);
   root.style.setProperty('--text3',       slots.textMuted);
   root.style.setProperty('--text4',       slots.textMuted);
+}
 
 async function loadFromSupabase() {
   const { data: schoolData, error: schoolError } = await db
