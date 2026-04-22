@@ -532,16 +532,15 @@ function applyTheme(theme) {
   root.style.setProperty('--blue-accent', slots.accent);
   root.style.setProperty('--blue-mid',    slots.textMuted);
   root.style.setProperty('--blue-dim',    slots.textMuted);
-  root.style.setProperty('--blue-border', slots.accent);
+  root.style.setProperty('--blue-border', slots.accentBg);
 
-  // Borders + muted text
-  root.style.setProperty('--border',      slots.textMuted);
-  root.style.setProperty('--border2',     slots.textMuted);
+  // Borders — subtle, barely visible edges on panels and rows
+  root.style.setProperty('--border',      slots.panel);
+  root.style.setProperty('--border2',     slots.panel);
   root.style.setProperty('--muted',       slots.textMuted);
   root.style.setProperty('--text2',       slots.text);
   root.style.setProperty('--text3',       slots.textMuted);
   root.style.setProperty('--text4',       slots.textMuted);
-}
 
 async function loadFromSupabase() {
   const { data: schoolData, error: schoolError } = await db
