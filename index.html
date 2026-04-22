@@ -486,14 +486,35 @@ function deriveSlots(hex) {
     else                { rr=c; gg=0; bb=x; }
     return 'rgb('+Math.round((rr+m)*255)+','+Math.round((gg+m)*255)+','+Math.round((bb+m)*255)+')';
   }
+  // Read the base color's own lightness and saturation so we can shift
+  // relative to it. Lightness scale: 0 = black, 50 = midtone, 100 = white.
+  const maxC = Math.max(r,g,b), minC = Math.min(r,g,b);
+  const baseL = ((maxC + minC) / 2) * 100;
+  let baseS = 0;
+  if (maxC !== minC) {
+    const d = maxC - minC;
+    baseS = (baseL > 50 ? d / (2 - maxC - minC) : d / (maxC + minC)) * 100;
+  }
+
+  // Derive relative shifts. Clamp to sane ranges so the display stays usable
+  // even if the base is very light or very dark.
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  const panelL    = clamp(baseL, 6, 35);          // panel = base, but floor/cap
+  const bgL       = clamp(panelL - 6, 2, 30);     // darker than panel
+  const cardL     = clamp(panelL + 10, 12, 55);   // brighter than panel
+  const accentL   = clamp(panelL + 45, 55, 75);   // bright highlight
+  const mutedL    = clamp(panelL + 30, 40, 70);   // mid-bright for labels
+  const panelSat  = clamp(baseS, 8, 70);
+  const accentSat = clamp(baseS + 20, 40, 85);
+
   return {
-    bg:        hsl(h, 22, 5),   // page background — darkest
-    panel:     hsl(h, 18, 10),  // left and right panel boxes
-    cardBg:    hsl(h, 40, 18),  // now-in-session card background
-    accentBg:  hsl(h, 40, 18),  // active schedule row background
-    accent:    hex,              // bright accent — bar, dot, active name
-    text:      '#f0ebe0',        // primary text — period names, clock
-    textMuted: hsl(h, 20, 63)    // secondary — dates, times, labels
+    bg:        hsl(h, panelSat, bgL),
+    panel:     hsl(h, panelSat, panelL),
+    cardBg:    hsl(h, panelSat + 5, cardL),
+    accentBg:  hsl(h, panelSat + 5, cardL),
+    accent:    hsl(h, accentSat, accentL),
+    text:      '#f0ebe0',
+    textMuted: hsl(h, clamp(baseS - 5, 10, 40), mutedL)
   };
 }
 
