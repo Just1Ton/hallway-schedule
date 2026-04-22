@@ -202,27 +202,52 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 </div>
 
 <div id="customize-overlay" style="display:none;position:fixed;inset:0;background:rgba(5,8,18,.92);z-index:100;overflow-y:auto;padding:1.5rem;">
-  <div style="background:var(--panel);border:0.5px solid #2a3a55;border-radius:16px;padding:2rem;max-width:480px;margin:0 auto;">
+  <div style="background:var(--panel);border:0.5px solid #2a3a55;border-radius:16px;padding:2rem;max-width:560px;margin:0 auto;">
     <h2 style="font-family:'Fraunces',serif;font-size:1.2rem;color:#c8bfa8;font-weight:300;margin-bottom:1.5rem;" id="customize-title">Customize School</h2>
-    <div style="margin-bottom:1.25rem;">
-      <label style="display:block;font-size:.66rem;color:var(--text4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem;">Base accent color</label>
+
+    <!-- Base color picker -->
+    <div style="margin-bottom:1.5rem;">
+      <label style="display:block;font-size:.66rem;color:var(--text4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem;">Base color</label>
       <div style="display:flex;align-items:center;gap:.75rem;">
-        <input type="color" id="theme-color-picker" value="#7eb8f7" style="width:48px;height:38px;border:0.5px solid #2a3a55;border-radius:7px;background:#0a0e1a;cursor:pointer;padding:2px;">
-        <input type="text" id="theme-color-hex" value="#7eb8f7" placeholder="#7eb8f7" maxlength="7" style="width:100px;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:7px;color:#c8dff5;font-family:'DM Mono',monospace;font-size:.8rem;padding:.42rem .7rem;">
-        <span style="font-size:.68rem;color:var(--text4);">hex value</span>
+        <input type="color" id="base-color-picker" value="#7eb8f7" style="width:48px;height:38px;border:0.5px solid #2a3a55;border-radius:7px;background:#0a0e1a;cursor:pointer;padding:2px;">
+        <input type="text" id="base-color-hex" value="#7eb8f7" placeholder="#7eb8f7" maxlength="7" style="width:100px;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:7px;color:#c8dff5;font-family:'DM Mono',monospace;font-size:.8rem;padding:.42rem .7rem;">
+        <span style="font-size:.64rem;color:var(--text4);flex:1;">Picking a new base color will reset all individual adjustments below.</span>
       </div>
     </div>
+
+    <!-- Live preview -->
     <div style="margin-bottom:1.5rem;">
       <label style="display:block;font-size:.66rem;color:var(--text4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem;">Preview</label>
-      <div id="theme-preview" style="background:#0f2040;border:0.5px solid #2e5080;border-radius:12px;padding:1rem;">
-        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;">
-          <div id="prev-dot" style="width:8px;height:8px;border-radius:50%;background:#7eb8f7;"></div>
-          <span id="prev-name" style="font-size:.9rem;color:#c8dff5;font-weight:500;">Period Name</span>
+      <div id="theme-preview" style="border-radius:12px;padding:.75rem;display:grid;grid-template-columns:40% 1fr;gap:.5rem;">
+        <div id="prev-panel-left" style="border-radius:8px;padding:.75rem;">
+          <div style="font-size:.55rem;letter-spacing:.08em;margin-bottom:.4rem;" id="prev-school">SCHOOL</div>
+          <div style="font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;margin-bottom:.4rem;color:#f0ebe0;">9:41</div>
+          <div id="prev-date" style="font-size:.55rem;margin-bottom:.6rem;">Mon, April 28</div>
+          <div id="prev-card" style="border-radius:6px;padding:.5rem;">
+            <div id="prev-cardlabel" style="font-size:.5rem;letter-spacing:.12em;margin-bottom:.2rem;">NOW IN SESSION</div>
+            <div id="prev-cardname" style="font-family:'Fraunces',serif;font-size:.85rem;font-weight:700;color:#f0ebe0;">Period 3</div>
+          </div>
         </div>
-        <div style="height:4px;border-radius:2px;background:#2e5080;margin-bottom:.5rem;"></div>
-        <div id="prev-badge" style="display:inline-block;background:#1a2d4a;border:0.5px solid #2e5080;border-radius:6px;padding:.25rem .6rem;font-size:.7rem;color:#7eb8f7;">Day 1</div>
+        <div id="prev-panel-right" style="border-radius:8px;padding:.5rem;display:flex;flex-direction:column;gap:.3rem;">
+          <div id="prev-row-past" style="padding:.3rem .5rem;border-radius:5px;font-size:.6rem;opacity:.4;">8:00 AM · Period 1 · 8:55 AM</div>
+          <div id="prev-row-active" style="padding:.4rem .5rem;border-radius:5px;font-size:.65rem;position:relative;">
+            <span id="prev-accent-bar" style="position:absolute;left:0;top:15%;height:70%;width:3px;border-radius:0 3px 3px 0;"></span>
+            <span style="color:#f0ebe0;font-weight:500;margin-left:.2rem;">● Period 3</span>
+          </div>
+          <div id="prev-row-future" style="padding:.3rem .5rem;border-radius:5px;font-size:.6rem;">10:10 AM · Period 4 · 11:05 AM</div>
+        </div>
       </div>
     </div>
+
+    <!-- Advanced: individual slots -->
+    <div style="margin-bottom:1rem;">
+      <button id="advanced-toggle" onclick="toggleAdvanced()" style="background:transparent;border:0.5px solid var(--border);border-radius:7px;color:var(--text3);font-family:'DM Mono',monospace;font-size:.7rem;padding:.32rem .75rem;cursor:pointer;width:100%;text-align:left;">▸ Advanced — customize individual colors</button>
+    </div>
+    <div id="advanced-panel" style="display:none;margin-bottom:1.5rem;background:var(--panel2);border:0.5px solid var(--border2);border-radius:10px;padding:1rem;">
+      <div id="slot-pickers"></div>
+    </div>
+
+    <!-- Action buttons -->
     <div style="display:flex;gap:.65rem;justify-content:flex-end;">
       <button onclick="closeCustomize()" style="background:transparent;border:0.5px solid var(--border);border-radius:8px;color:var(--text3);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1.2rem;cursor:pointer;">Cancel</button>
       <button onclick="saveCustomize()" style="background:#1a3a6a;border:0.5px solid var(--blue-border);border-radius:8px;color:var(--blue-accent);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1.2rem;cursor:pointer;">Save</button>
@@ -290,74 +315,173 @@ async function signOut() {
   window.location.href = '/login.html';
 }
 
-function hexToTheme(hex) {
-  // Parse hex → RGB (normalized 0–1)
+// ── THEME SLOT DEFINITIONS ────────────────────────────────────
+// Each slot has a stable key, a human label, and a description.
+// The order here controls the order shown in the Advanced panel.
+const THEME_SLOTS = [
+  { key: 'bg',        label: 'Page background',       hint: 'Area behind the panels' },
+  { key: 'panel',     label: 'Panels',                hint: 'Left and right rounded boxes' },
+  { key: 'cardBg',    label: 'Now-in-session card',   hint: 'Highlight box inside the left panel' },
+  { key: 'accentBg',  label: 'Active period',         hint: 'Current schedule item' },
+  { key: 'accent',    label: 'Accent',                hint: 'Bar, dot, headline, header text' },
+  { key: 'text',      label: 'Primary text',          hint: 'Period names, clock' },
+  { key: 'textMuted', label: 'Secondary text',        hint: 'Dates, times, labels' }
+];
+
+// Working state for the Customize modal
+let customizeBase = '#7eb8f7';
+let customizeSlots = {};
+
+// ── DERIVE SLOTS FROM BASE HEX ────────────────────────────────
+// Must stay in sync with deriveSlots() in index.html.
+function deriveSlots(hex) {
   const r = parseInt(hex.slice(1,3),16) / 255;
   const g = parseInt(hex.slice(3,5),16) / 255;
   const b = parseInt(hex.slice(5,7),16) / 255;
-
-  // RGB → HSL (only the hue is needed — sat/lum are set per role)
   const max = Math.max(r,g,b), min = Math.min(r,g,b);
-  let hue = 0;
+  let h = 0;
   if (max !== min) {
     const d = max - min;
-    if (max === r) hue = (g-b)/d + (g < b ? 6 : 0);
-    else if (max === g) hue = (b-r)/d + 2;
-    else hue = (r-g)/d + 4;
-    hue *= 60;
+    if (max === r) h = (g-b)/d + (g < b ? 6 : 0);
+    else if (max === g) h = (b-r)/d + 2;
+    else h = (r-g)/d + 4;
+    h *= 60;
   }
-
-  // HSL → rgb() string
-  function hsl(h, s, l) {
-    s /= 100; l /= 100;
-    const c = (1 - Math.abs(2*l - 1)) * s;
-    const x = c * (1 - Math.abs(((h/60) % 2) - 1));
-    const m = l - c/2;
+  function hsl(hue, sat, lum) {
+    sat /= 100; lum /= 100;
+    const c = (1 - Math.abs(2*lum - 1)) * sat;
+    const x = c * (1 - Math.abs(((hue/60) % 2) - 1));
+    const m = lum - c/2;
     let rr, gg, bb;
-    if (h < 60)       { rr=c; gg=x; bb=0; }
-    else if (h < 120) { rr=x; gg=c; bb=0; }
-    else if (h < 180) { rr=0; gg=c; bb=x; }
-    else if (h < 240) { rr=0; gg=x; bb=c; }
-    else if (h < 300) { rr=x; gg=0; bb=c; }
-    else              { rr=c; gg=0; bb=x; }
+    if (hue < 60)       { rr=c; gg=x; bb=0; }
+    else if (hue < 120) { rr=x; gg=c; bb=0; }
+    else if (hue < 180) { rr=0; gg=c; bb=x; }
+    else if (hue < 240) { rr=0; gg=x; bb=c; }
+    else if (hue < 300) { rr=x; gg=0; bb=c; }
+    else                { rr=c; gg=0; bb=x; }
     return 'rgb('+Math.round((rr+m)*255)+','+Math.round((gg+m)*255)+','+Math.round((bb+m)*255)+')';
   }
-
-  // Matches the palette computed by applyTheme() in index.html
+  // Convert rgb() to hex for the color pickers
+  function rgbToHex(rgbStr) {
+    const nums = rgbStr.match(/\d+/g).map(Number);
+    return '#' + nums.map(n => n.toString(16).padStart(2,'0')).join('');
+  }
   return {
+    bg:        rgbToHex(hsl(h, 22, 5)),
+    panel:     rgbToHex(hsl(h, 18, 10)),
+    cardBg:    rgbToHex(hsl(h, 40, 18)),
+    accentBg:  rgbToHex(hsl(h, 40, 18)),
     accent:    hex,
-    mid:       hsl(hue, 42, 55),
-    dim:       hsl(hue, 30, 35),
-    border:    hsl(hue, 35, 30),
-    bg:        hsl(hue, 40, 18),
-    darkPanel: hsl(hue, 40, 18),
-    dark:      hsl(hue, 45, 10)
+    text:      '#f0ebe0',
+    textMuted: rgbToHex(hsl(h, 20, 63))
   };
 }
 
-function updatePreview(hex) {
-  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
-  const t = hexToTheme(hex);
-  const preview = document.getElementById('theme-preview');
-  preview.style.background = t.darkPanel;
-  preview.style.borderColor = t.border;
-  document.getElementById('prev-dot').style.background = t.accent;
-  document.getElementById('prev-name').style.color = t.accent;
-  preview.querySelectorAll('div')[2].style.background = t.border;
-  document.getElementById('prev-badge').style.background = t.bg;
-  document.getElementById('prev-badge').style.borderColor = t.border;
-  document.getElementById('prev-badge').style.color = t.accent;
+// ── PREVIEW UPDATE ────────────────────────────────────────────
+function updatePreview() {
+  const s = customizeSlots;
+  const pv = document.getElementById('theme-preview');
+  pv.style.background = s.bg;
+  document.getElementById('prev-panel-left').style.background = s.panel;
+  document.getElementById('prev-panel-right').style.background = s.panel;
+  document.getElementById('prev-school').style.color = s.textMuted;
+  document.getElementById('prev-date').style.color = s.textMuted;
+  document.getElementById('prev-card').style.background = s.cardBg;
+  document.getElementById('prev-cardlabel').style.color = s.textMuted;
+  document.getElementById('prev-row-past').style.color = s.textMuted;
+  document.getElementById('prev-row-active').style.background = s.accentBg;
+  document.getElementById('prev-row-active').style.color = s.text;
+  document.getElementById('prev-row-future').style.background = s.bg;
+  document.getElementById('prev-row-future').style.color = s.textMuted;
+  document.getElementById('prev-accent-bar').style.background = s.accent;
 }
 
+// ── ADVANCED PANEL ────────────────────────────────────────────
+function renderSlotPickers() {
+  const el = document.getElementById('slot-pickers');
+  el.innerHTML = '';
+  THEME_SLOTS.forEach(slot => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:38px 100px 1fr auto;gap:.6rem;align-items:center;margin-bottom:.5rem;';
+    row.innerHTML =
+      '<input type="color" id="slot-color-' + slot.key + '" value="' + customizeSlots[slot.key] + '" style="width:38px;height:30px;border:0.5px solid #2a3a55;border-radius:6px;background:#0a0e1a;cursor:pointer;padding:2px;">'
+      + '<input type="text" id="slot-hex-' + slot.key + '" value="' + customizeSlots[slot.key] + '" maxlength="7" style="background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:6px;color:#c8dff5;font-family:DM Mono,monospace;font-size:.72rem;padding:.32rem .55rem;">'
+      + '<div><div style="font-size:.72rem;color:#c8dff5;">' + slot.label + '</div><div style="font-size:.62rem;color:var(--text4);">' + slot.hint + '</div></div>'
+      + '<button onclick="resetSlot(\'' + slot.key + '\')" style="background:transparent;border:0.5px solid var(--border);border-radius:5px;color:var(--text3);font-family:DM Mono,monospace;font-size:.64rem;padding:.22rem .5rem;cursor:pointer;">reset</button>';
+    el.appendChild(row);
+
+    // Hook up the color picker and hex input for this slot
+    const picker = row.querySelector('#slot-color-' + slot.key);
+    const hex = row.querySelector('#slot-hex-' + slot.key);
+    picker.addEventListener('input', function() {
+      hex.value = this.value;
+      customizeSlots[slot.key] = this.value;
+      updatePreview();
+    });
+    hex.addEventListener('input', function() {
+      const v = this.value.trim();
+      if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+        picker.value = v;
+        customizeSlots[slot.key] = v;
+        updatePreview();
+      }
+    });
+  });
+}
+
+function resetSlot(key) {
+  const derived = deriveSlots(customizeBase);
+  customizeSlots[key] = derived[key];
+  document.getElementById('slot-color-' + key).value = derived[key];
+  document.getElementById('slot-hex-' + key).value = derived[key];
+  updatePreview();
+}
+
+function toggleAdvanced() {
+  const panel = document.getElementById('advanced-panel');
+  const btn = document.getElementById('advanced-toggle');
+  if (panel.style.display === 'none' || !panel.style.display) {
+    panel.style.display = 'block';
+    btn.textContent = '▾ Advanced — customize individual colors';
+  } else {
+    panel.style.display = 'none';
+    btn.textContent = '▸ Advanced — customize individual colors';
+  }
+}
+
+// ── OPEN / CLOSE / SAVE ───────────────────────────────────────
 async function openCustomize(schoolId) {
   customizeSchoolId = schoolId;
   const school = schools.find(s => s.id === schoolId);
   document.getElementById('customize-title').textContent = 'Customize: ' + school.name;
+
+  // Load existing theme
   const { data } = await db.from('schools').select('theme').eq('id', schoolId).single();
-  const hex = (data && data.theme && data.theme.accent) || '#7eb8f7';
-  document.getElementById('theme-color-picker').value = hex;
-  document.getElementById('theme-color-hex').value = hex;
-  updatePreview(hex);
+  const theme = (data && data.theme) || {};
+
+  // Figure out the base hex
+  // 1. If theme has a `base` field, use that (new format)
+  // 2. Else if it has `accent`, use accent (legacy or partial new format)
+  // 3. Else default
+  customizeBase = theme.base || theme.accent || '#7eb8f7';
+
+  // Populate slots — use stored values where present, otherwise derive from base
+  const derived = deriveSlots(customizeBase);
+  customizeSlots = {};
+  THEME_SLOTS.forEach(slot => {
+    customizeSlots[slot.key] = theme[slot.key] || derived[slot.key];
+  });
+
+  document.getElementById('base-color-picker').value = customizeBase;
+  document.getElementById('base-color-hex').value = customizeBase;
+
+  renderSlotPickers();
+  updatePreview();
+
+  // Always start with Advanced panel collapsed
+  document.getElementById('advanced-panel').style.display = 'none';
+  document.getElementById('advanced-toggle').textContent = '▸ Advanced — customize individual colors';
+
   document.getElementById('customize-overlay').style.display = 'block';
 }
 
@@ -367,9 +491,14 @@ function closeCustomize() {
 }
 
 async function saveCustomize() {
-  const hex = document.getElementById('theme-color-hex').value.trim();
-  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) { alert('Please enter a valid hex color like #7eb8f7'); return; }
-  const theme = hexToTheme(hex);
+  // Validate all hex values before saving
+  for (const slot of THEME_SLOTS) {
+    if (!/^#[0-9a-fA-F]{6}$/.test(customizeSlots[slot.key])) {
+      alert('Invalid hex for "' + slot.label + '": ' + customizeSlots[slot.key]);
+      return;
+    }
+  }
+  const theme = Object.assign({ base: customizeBase }, customizeSlots);
   await db.from('schools').update({ theme }).eq('id', customizeSchoolId);
   closeCustomize();
   showSuccess();
@@ -1040,16 +1169,26 @@ function showSuccess() {
   setTimeout(() => bar.classList.remove('visible'), 3000);
 }
 
-document.getElementById('theme-color-picker').addEventListener('input', function() {
-  document.getElementById('theme-color-hex').value = this.value;
-  updatePreview(this.value);
+// When the base color picker changes, re-derive all 7 slots from the new
+// base hex — this wipes any per-slot overrides the user had set.
+function handleBaseChange(hex) {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+  customizeBase = hex;
+  customizeSlots = deriveSlots(hex);
+  renderSlotPickers();
+  updatePreview();
+}
+
+document.getElementById('base-color-picker').addEventListener('input', function() {
+  document.getElementById('base-color-hex').value = this.value;
+  handleBaseChange(this.value);
 });
 
-document.getElementById('theme-color-hex').addEventListener('input', function() {
+document.getElementById('base-color-hex').addEventListener('input', function() {
   const hex = this.value.trim();
   if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
-    document.getElementById('theme-color-picker').value = hex;
-    updatePreview(hex);
+    document.getElementById('base-color-picker').value = hex;
+    handleBaseChange(hex);
   }
 });
 
