@@ -248,7 +248,9 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
     </div>
 
     <!-- Action buttons -->
-    <div style="display:flex;gap:.65rem;justify-content:flex-end;">
+    <div style="display:flex;gap:.65rem;align-items:center;">
+      <button onclick="resetToDefault()" style="background:transparent;border:0.5px solid var(--border);border-radius:8px;color:var(--text3);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1rem;cursor:pointer;">Reset to default</button>
+      <div style="flex:1;"></div>
       <button onclick="closeCustomize()" style="background:transparent;border:0.5px solid var(--border);border-radius:8px;color:var(--text3);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1.2rem;cursor:pointer;">Cancel</button>
       <button onclick="saveCustomize()" style="background:#1a3a6a;border:0.5px solid var(--blue-border);border-radius:8px;color:var(--blue-accent);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1.2rem;cursor:pointer;">Save</button>
     </div>
@@ -448,11 +450,15 @@ function renderSlotPickers() {
   });
 }
 
-function resetSlot(key) {
-  const derived = deriveSlots(customizeBase);
-  customizeSlots[key] = derived[key];
-  document.getElementById('slot-color-' + key).value = derived[key];
-  document.getElementById('slot-hex-' + key).value = derived[key];
+// Resets the entire theme back to the display's original default colors.
+// Same as setting the base to #111827 and re-deriving everything.
+function resetToDefault() {
+  if (!confirm('Reset all colors to default? This cannot be undone (until you click Cancel instead of Save).')) return;
+  customizeBase = '#111827';
+  customizeSlots = deriveSlots(customizeBase);
+  document.getElementById('base-color-picker').value = customizeBase;
+  document.getElementById('base-color-hex').value = customizeBase;
+  renderSlotPickers();
   updatePreview();
 }
 
