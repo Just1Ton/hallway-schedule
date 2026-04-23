@@ -1223,19 +1223,62 @@ function renderSchedule(list, forceRebuild) {
       // each with its own independent past/current/future state
       const slotIsCurrent = si === curSlotIdx;
       d.className = 'pr linked' + (slotIsCurrent ? ' current' : '');
-      d.style.flex = slot.blocks.length; // claim N rows' worth of vertical space
-      slot.blocks.forEach((b, bi) => {
-        const bs = t2m(b.start), be = t2m(b.end);
-        const bRunning = now >= bs && now < be;
-        const bPast = now >= be;
-        const state = bRunning ? 'current' : bPast ? 'past' : 'future';
-        const sub = document.createElement('div');
-        sub.className = 'pr-sub ' + state;
-        sub.dataset.sub = bi;
-        if (bRunning) {
-          const pct = Math.min(100, Math.round(((now - bs) / (be - bs)) * 100));
-          sub.style.setProperty('--pct', pct + '%');
-        }
+      function renderCardTick() {
+  const active = getActiveSchedule();
+  if (!active) return;
+  const { blocks, eod } = active;
+  const list = buildList(blocks, eod);
+  if (!list || !list.length) return;
+
+  const slots = buildSlots(list);
+  const now = nowM();
+  const curSlotIdx = findCurrentSlot(slots, now);
+
+  if (curSlotIdx === -1) {
+    if (renderCardTick._wasActive) {
+      renderCardTick._wasActive = false;
+      _lastActiveIdx = -2;
+      renderDisplay();
+    }
+    renderCard(list);
+    return;
+  }
+
+  const justSwitched = renderCardTick._lastCurIdx !== curSlotIdx;
+  renderCardTick._lastCurIdx = curSlotIdx;
+  renderCardTick._wasActive = true;
+
+  if (justSwitched) {
+    _lastActiveIdx = -2;
+    renderDisplay();
+    setTimeout(() => {
+      const curRow = document.querySelector('.pr.current');
+      if (!curRow) return;
+      curRow.classList.add('shrinking');
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        curRow.classList.remove('shrinking');
+      }));
+    }, 50);
+    return;
+  }
+
+  renderCard(list);
+
+  const curRow = document.querySelector('.pr.current');
+  if (!curRow) return;
+  // For linked slots, fire the shrinking animation when the LAST block in
+  // the slot is about to end — that's when the slot itself is ending.
+  const slot = slots[curSlotIdx];
+  const slotEnd = slot.linked ? slot.slotEnd : t2m(slot.end);
+  const remaining = (slotEnd - now) * 60;
+  if (remaining <= 1) {
+    curRow.classList.add('shrinking');
+  } else {
+    curRow.classList.remove('shrinking');
+  }
+}
+renderCardTick._wasActive = false;
+renderCardTick._lastCurIdx = -1;
         sub.innerHTML = '<div class="prt">' + fmt(b.start) + '</div>'
           + '<div class="prn">' + (bRunning ? '<span class="ndot"></span>' : '') + b.name + '</div>'
           + '<div class="pre">' + fmt(b.end) + '</div>';
