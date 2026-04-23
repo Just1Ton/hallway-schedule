@@ -242,7 +242,7 @@ html, body {
   gap: .4rem;
   padding: .1rem .6rem;
   border-radius: 6px;
-  border: 0.5px solid transparent;
+  border: 0.5px solid var(--border2);
   position: relative;
   overflow: hidden;
   min-height: 0;
@@ -256,11 +256,13 @@ html, body {
   filter: saturate(0);
 }
 .pr-sub.future {
-  background: transparent;
+  background: var(--panel2);
+  border-color: var(--border2);
 }
 .pr-sub.current {
   --pct: 0%;
-  background: linear-gradient(to right, var(--blue-bg) var(--pct), transparent var(--pct));
+  background: linear-gradient(to right, var(--blue-bg) var(--pct), var(--blue-dark) var(--pct));
+  border-color: var(--blue-border);
 }
 
 .pr-sub .prt { font-size: clamp(.5rem, .95vw, .85rem); color: #8a8578; white-space: nowrap; }
