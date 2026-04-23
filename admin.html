@@ -482,7 +482,7 @@ async function openCustomize(schoolId) {
   // 1. If theme has a `base` field, use that (new format)
   // 2. Else if it has `accent`, use accent (legacy or partial new format)
   // 3. Else default
-  customizeBase = theme.base || theme.accent || '#7eb8f7';
+  customizeBase = theme.base || '#111827';
 
   // Populate slots — use stored values where present, otherwise derive from base
   const derived = deriveSlots(customizeBase);
