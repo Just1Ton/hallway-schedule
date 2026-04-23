@@ -226,7 +226,7 @@ html, body {
 /* When the whole linked slot is past, drop the container's outline and fill
    — the sub-rows inside are styled as past individually, so you see staggered
    darkened bars floating on the panel, matching the look of regular past rows. */
-.pr.linked:not(.current):not(:has(.pr-sub.future)):not(:has(.pr-sub.current)) {
+.pr.linked.all-past {
   background: transparent;
   border-color: transparent;
 }
@@ -1134,7 +1134,8 @@ function renderSchedule(list, forceRebuild) {
       // Linked slot — one .pr.linked container with N .pr-sub rows,
       // each with its own independent past/current/future state
       const slotIsCurrent = si === curSlotIdx;
-      d.className = 'pr linked' + (slotIsCurrent ? ' current' : '');
+      const allPast = !slotIsCurrent && slot.blocks.every(b => now >= t2m(b.end));
+      d.className = 'pr linked' + (slotIsCurrent ? ' current' : '') + (allPast ? ' all-past' : '');
       const slotRange = slot.slotEnd - slot.slotStart;
       slot.blocks.forEach((b, bi) => {
         const bs = t2m(b.start), be = t2m(b.end);
