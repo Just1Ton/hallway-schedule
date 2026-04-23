@@ -198,6 +198,85 @@ html, body {
   border-radius: 0 3px 3px 0;
 }
 
+/* ── LINKED SLOT ──
+   A linked slot is one .pr.linked container holding multiple .pr-sub
+   rows. The container takes roughly N rows' worth of flex space so
+   the list rhythm stays consistent. Each sub-row gets its own
+   past/current/future state class. */
+.pr.linked {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  gap: 0;
+  background: transparent;
+  border: none;
+  overflow: visible;
+}
+.pr.linked::before { display: none; }
+
+.pr-sub {
+  display: grid;
+  grid-template-columns: minmax(0, 5.5rem) 1fr minmax(0, 5.5rem);
+  align-items: center;
+  gap: .5rem;
+  padding: 0 .9rem;
+  border-radius: 10px;
+  border: 0.5px solid transparent;
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  transition: background 1s ease, border-color 1s ease;
+  margin-bottom: 2px;
+}
+.pr-sub:last-child { margin-bottom: 0; }
+
+.pr-sub.past {
+  opacity: .18;
+  background: var(--bg);
+  filter: saturate(0);
+}
+.pr-sub.future {
+  background: var(--panel2);
+  border-color: var(--border2);
+}
+.pr-sub.current {
+  --pct: 0%;
+  background: linear-gradient(to right, var(--blue-bg) var(--pct), var(--blue-dark) var(--pct));
+  border-color: var(--blue-border);
+}
+.pr-sub.current::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12%;
+  height: 76%;
+  width: 3px;
+  background: var(--blue-accent);
+  border-radius: 0 3px 3px 0;
+}
+
+.pr-sub .prt { font-size: clamp(.55rem, 1.1vw, 1rem); color: #8a8578; white-space: nowrap; }
+.pr-sub .prn { font-size: clamp(.65rem, 1.2vw, 1.1rem); color: #c8c2b4; white-space: nowrap; overflow: hidden; }
+.pr-sub .pre { font-size: clamp(.55rem, 1.1vw, 1rem); color: #8a8578; text-align: right; white-space: nowrap; justify-self: end; width: 100%; }
+.pr-sub.current .prn { color: #f0ebe0; font-weight: 500; font-size: clamp(.9rem, 1.8vw, 1.5rem); }
+
+/* ── SPLIT NOW-IN-SESSION CARD ──
+   When the current slot is linked, the card shows one shared label
+   then stacks a mini-row per block: name, time range, progress, remaining */
+.now-split { display: flex; flex-direction: column; gap: .9rem; margin-top: .3rem; }
+.now-split-item .now-split-name {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.05rem, 2.3vw, 1.7rem);
+  color: #f0ebe0;
+  font-weight: 700;
+  line-height: 1.15;
+}
+.now-split-item .now-split-name.inactive { color: var(--blue-mid); font-weight: 400; }
+.now-split-item .now-split-time { font-size: clamp(.7rem, 1.1vw, 1rem); color: var(--blue-mid); margin-top: .15rem; }
+.now-split-item .prog-wrap { margin-top: .45rem; }
+.now-split-item .now-split-remain { font-size: clamp(.6rem, 1vw, .85rem); color: var(--blue-mid); margin-top: .3rem; text-align: right; }
+
 .pr.current.shrinking {
   padding: 0 .9rem;
   flex: 1;
@@ -680,6 +759,162 @@ function buildList(blocks, eod) {
   return list;
 }
 
+// Groups consecutive blocks with linkPrev:true into linked slots.
+// Returns an array where each element is either a single block or
+// a {linked:true, blocks:[...]} group. Downstream code iterates slots.
+// slotStart = earliest start in group, slotEnd = latest end in group —
+// used for slot-level past/current/future state.
+function buildSlots(list) {
+  const slots = [];
+  list.forEach((block, i) => {
+    if (i > 0 && block.linkPrev && slots.length) {
+      const prev = slots[slots.length - 1];
+      if (prev.linked) {
+        prev.blocks.push(block);
+      } else {
+        slots[slots.length - 1] = { linked: true, blocks: [prev, block] };
+      }
+    } else {
+      slots.push(block);
+    }
+  });
+  return slots.map(s => {
+    if (!s.linked) return s;
+    const starts = s.blocks.map(b => t2m(b.start));
+    const ends = s.blocks.map(b => t2m(b.end));
+    return Object.assign({}, s, {
+      slotStart: Math.min.apply(null, starts),
+      slotEnd: Math.max.apply(null, ends)
+    });
+  });
+}
+
+// Returns slot-level state: 'past' | 'current' | 'future' | 'upcoming-gap'
+// 'current' = any block in the slot is running OR we're inside its time window
+function slotState(slot, now) {
+  if (slot.linked) {
+    if (now < slot.slotStart) return 'future';
+    if (now >= slot.slotEnd) return 'past';
+    return 'current';
+  }
+  const s = t2m(slot.start), e = t2m(slot.end);
+  if (now < s) return 'future';
+  if (now >= e) return 'past';
+  return 'current';
+}
+
+// Returns the index of the currently-active slot in a slot array, or -1
+function findCurrentSlot(slots, now) {
+  for (let i = 0; i < slots.length; i++) {
+    if (slotState(slots[i], now) === 'current') return i;
+  }
+  return -1;
+}
+
+// Groups consecutive blocks with linkPrev:true into linked slots.
+// Returns an array where each element is either a single block or
+// a {linked:true, blocks:[...]} group. Downstream code iterates slots.
+// slotStart = earliest start in group, slotEnd = latest end in group —
+// used for slot-level past/current/future state.
+function buildSlots(list) {
+  const slots = [];
+  list.forEach((block, i) => {
+    if (i > 0 && block.linkPrev && slots.length) {
+      const prev = slots[slots.length - 1];
+      if (prev.linked) {
+        prev.blocks.push(block);
+      } else {
+        slots[slots.length - 1] = { linked: true, blocks: [prev, block] };
+      }
+    } else {
+      slots.push(block);
+    }
+  });
+  return slots.map(s => {
+    if (!s.linked) return s;
+    const starts = s.blocks.map(b => t2m(b.start));
+    const ends = s.blocks.map(b => t2m(b.end));
+    return Object.assign({}, s, {
+      slotStart: Math.min.apply(null, starts),
+      slotEnd: Math.max.apply(null, ends)
+    });
+  });
+}
+
+// Returns slot-level state: 'past' | 'current' | 'future' | 'upcoming-gap'
+// 'current' = any block in the slot is running OR we're inside its time window
+function slotState(slot, now) {
+  if (slot.linked) {
+    if (now < slot.slotStart) return 'future';
+    if (now >= slot.slotEnd) return 'past';
+    return 'current';
+  }
+  const s = t2m(slot.start), e = t2m(slot.end);
+  if (now < s) return 'future';
+  if (now >= e) return 'past';
+  return 'current';
+}
+
+// Returns the index of the currently-active slot in a slot array, or -1
+function findCurrentSlot(slots, now) {
+  for (let i = 0; i < slots.length; i++) {
+    if (slotState(slots[i], now) === 'current') return i;
+  }
+  return -1;
+}
+
+// Groups consecutive blocks with linkPrev:true into linked slots.
+// Returns an array where each element is either a single block or
+// a {linked:true, blocks:[...]} group. Downstream code iterates slots.
+// slotStart = earliest start in group, slotEnd = latest end in group —
+// used for slot-level past/current/future state.
+function buildSlots(list) {
+  const slots = [];
+  list.forEach((block, i) => {
+    if (i > 0 && block.linkPrev && slots.length) {
+      const prev = slots[slots.length - 1];
+      if (prev.linked) {
+        prev.blocks.push(block);
+      } else {
+        slots[slots.length - 1] = { linked: true, blocks: [prev, block] };
+      }
+    } else {
+      slots.push(block);
+    }
+  });
+  return slots.map(s => {
+    if (!s.linked) return s;
+    const starts = s.blocks.map(b => t2m(b.start));
+    const ends = s.blocks.map(b => t2m(b.end));
+    return Object.assign({}, s, {
+      slotStart: Math.min.apply(null, starts),
+      slotEnd: Math.max.apply(null, ends)
+    });
+  });
+}
+
+// Returns slot-level state: 'past' | 'current' | 'future' | 'upcoming-gap'
+// 'current' = any block in the slot is running OR we're inside its time window
+function slotState(slot, now) {
+  if (slot.linked) {
+    if (now < slot.slotStart) return 'future';
+    if (now >= slot.slotEnd) return 'past';
+    return 'current';
+  }
+  const s = t2m(slot.start), e = t2m(slot.end);
+  if (now < s) return 'future';
+  if (now >= e) return 'past';
+  return 'current';
+}
+
+// Returns the index of the currently-active slot in a slot array, or -1
+function findCurrentSlot(slots, now) {
+  for (let i = 0; i < slots.length; i++) {
+    if (slotState(slots[i], now) === 'current') return i;
+  }
+  return -1;
+}
+
 function getActiveSchedule() {
   const ov = getOverrideForToday();
   if (ov) return { blocks: ov.blocks, eod: ov.eod, label: ov.label, isOverride: true };
@@ -729,6 +964,10 @@ function renderDisplay() {
   renderClock('d');
   set('d-school', S.schoolName);
   set('ns-school', S.schoolName);
+
+  // Clear any stale split-card DOM — renderCard rebuilds it when needed
+  const staleSplit = document.querySelector('.now-split');
+  if (staleSplit) staleSplit.remove();
 
   const noSch = isNoSchoolToday();
   const weekend = isWeekend();
@@ -802,22 +1041,34 @@ function renderDisplay() {
 }
 
 function renderCard(list) {
+  const slots = buildSlots(list);
   const now = nowM();
-  let idx = -1;
-  for (let i=0;i<list.length;i++) {
-    if(now>=t2m(list[i].start)&&now<t2m(list[i].end)){idx=i;break;}
-  }
-  const nn=document.getElementById('d-nowname');
-  const nt=document.getElementById('d-nowtime');
-  const pb=document.getElementById('d-progbar');
-  const pr=document.getElementById('d-remain');
-  const nl=document.getElementById('d-nowlabel');
+  const slotIdx = findCurrentSlot(slots, now);
 
-  if (idx===-1) {
-    const first=t2m(list[0].start), last=t2m(list[list.length-1].end);
-    if (now<first) {
-      const minsUntil = first - now;
-      const totalSecs = Math.ceil(minsUntil * 60);
+  const nn = document.getElementById('d-nowname');
+  const nt = document.getElementById('d-nowtime');
+  const pb = document.getElementById('d-progbar');
+  const pr = document.getElementById('d-remain');
+  const nl = document.getElementById('d-nowlabel');
+  const card = document.querySelector('.now-card');
+
+  // Remove any previous split-card UI before re-rendering
+  const prevSplit = card.querySelector('.now-split');
+  if (prevSplit) prevSplit.remove();
+
+  // Show the single-block UI elements by default — we hide them only for linked slots
+  nn.style.display = '';
+  nt.style.display = '';
+  const singleProg = card.querySelector('.prog-wrap');
+  const singleRem = document.getElementById('d-remain');
+  if (singleProg) singleProg.style.display = '';
+  if (singleRem) singleRem.style.display = '';
+
+  if (slotIdx === -1) {
+    // Not in any slot — passing time, pre-school, or after-school
+    const first = t2m(list[0].start), last = t2m(list[list.length - 1].end);
+    if (now < first) {
+      const totalSecs = Math.ceil((first - now) * 60);
       const hrs = Math.floor(totalSecs / 3600);
       const mins = Math.floor((totalSecs % 3600) / 60);
       const secs = totalSecs % 60;
@@ -830,12 +1081,13 @@ function renderCard(list) {
       nt.textContent = 'Starts at ' + fmt(list[0].start);
       pb.style.width = '0%';
       pr.textContent = countdown;
-    } else if (now>=last) {
-      nn.textContent='School day complete';
-      nt.textContent='See you tomorrow!';
-      nl.textContent='End of day';
-      pb.style.width='0%'; pr.textContent='';
+    } else if (now >= last) {
+      nn.textContent = 'School day complete';
+      nt.textContent = 'See you tomorrow!';
+      nl.textContent = 'End of day';
+      pb.style.width = '0%'; pr.textContent = '';
     } else {
+      // Passing time — find the next block regardless of slot boundary
       const next = list.find(p => t2m(p.start) > now);
       if (next) {
         const prevEnd = list.filter(p => t2m(p.end) <= now).pop();
@@ -859,65 +1111,178 @@ function renderCard(list) {
     return;
   }
 
-  const p=list[idx], s=t2m(p.start), e=t2m(p.end);
-  const nowExact = nowM();
-  const pct = Math.min(100, ((nowExact-s)/(e-s))*100).toFixed(4);
-  const remMins = e - nowExact;
-  nl.textContent = p.isEod ? 'End of school day' : p.isBreak ? p.name : 'Now in session';
-  nn.textContent = p.name;
-  nt.textContent = fmt(p.start)+' \u2013 '+fmt(p.end);
-  pb.style.width = pct+'%';
-  if (remMins <= 1) {
-    const remSecs = Math.ceil(remMins * 60);
-    pr.textContent = remSecs <= 0 ? 'Starting now' : remSecs + 's remaining';
-  } else {
-    pr.textContent = Math.ceil(remMins) + ' min remaining';
+  const slot = slots[slotIdx];
+
+  // Single-block slot — unchanged behavior
+  if (!slot.linked) {
+    const p = slot, s = t2m(p.start), e = t2m(p.end);
+    const pct = Math.min(100, ((now - s) / (e - s)) * 100).toFixed(4);
+    const remMins = e - now;
+    nl.textContent = p.isEod ? 'End of school day' : p.isBreak ? p.name : 'Now in session';
+    nn.textContent = p.name;
+    nt.textContent = fmt(p.start) + ' \u2013 ' + fmt(p.end);
+    pb.style.width = pct + '%';
+    if (remMins <= 1) {
+      const remSecs = Math.ceil(remMins * 60);
+      pr.textContent = remSecs <= 0 ? 'Starting now' : remSecs + 's remaining';
+    } else {
+      pr.textContent = Math.ceil(remMins) + ' min remaining';
+    }
+    return;
   }
+
+  // Linked slot — build split card. Hide the single-block UI and render
+  // one mini-row per linked block with its own name/time/progress/remaining
+  nl.textContent = 'Now in session';
+  nn.style.display = 'none';
+  nt.style.display = 'none';
+  if (singleProg) singleProg.style.display = 'none';
+  if (singleRem) singleRem.style.display = 'none';
+
+  const split = document.createElement('div');
+  split.className = 'now-split';
+  slot.blocks.forEach((b, bi) => {
+    const s = t2m(b.start), e = t2m(b.end);
+    const running = now >= s && now < e;
+    const upcoming = now < s;
+    const item = document.createElement('div');
+    item.className = 'now-split-item';
+
+    const nameCls = running ? '' : 'inactive';
+    const pct = running ? Math.min(100, ((now - s) / (e - s)) * 100).toFixed(4) : 0;
+
+    let remainText = '';
+    if (running) {
+      const remMins = e - now;
+      if (remMins <= 1) {
+        const remSecs = Math.ceil(remMins * 60);
+        remainText = remSecs <= 0 ? 'Starting now' : remSecs + 's remaining';
+      } else {
+        remainText = Math.ceil(remMins) + ' min remaining';
+      }
+    } else if (upcoming) {
+      const mins = s - now;
+      if (mins <= 1) {
+        const secs = Math.ceil(mins * 60);
+        remainText = 'Starts in ' + secs + 's';
+      } else {
+        remainText = 'Starts in ' + Math.ceil(mins) + ' min';
+      }
+    } else {
+      remainText = 'Ended at ' + fmt(b.end);
+    }
+
+    item.innerHTML =
+      '<div class="now-split-name ' + nameCls + '">' + b.name + '</div>'
+      + '<div class="now-split-time">' + fmt(b.start) + ' \u2013 ' + fmt(b.end) + '</div>'
+      + '<div class="prog-wrap"><div class="prog-bar" style="width:' + pct + '%"></div></div>'
+      + '<div class="now-split-remain">' + remainText + '</div>';
+    split.appendChild(item);
+  });
+  card.appendChild(split);
 }
 
 let _lastActiveIdx = -2;
 let _lastListKey = '';
 
-function listKey(list) { return list.map(p => p.start+p.end+p.name).join('|'); }
+function listKey(list) { return list.map(p => p.start+p.end+p.name+(p.linkPrev?'L':'')).join('|'); }
 
 function renderSchedule(list, forceRebuild) {
   const el = document.getElementById('sched-list');
+  const slots = buildSlots(list);
   const now = nowM();
-  let curIdx = -1;
-  for (let i=0;i<list.length;i++) {
-    if (now>=t2m(list[i].start) && now<t2m(list[i].end)) { curIdx=i; break; }
-  }
+  const curSlotIdx = findCurrentSlot(slots, now);
   const key = listKey(list);
 
-  if (forceRebuild || curIdx !== _lastActiveIdx || key !== _lastListKey) {
-    _lastActiveIdx = curIdx;
+  if (forceRebuild || curSlotIdx !== _lastActiveIdx || key !== _lastListKey) {
+    _lastActiveIdx = curSlotIdx;
     _lastListKey = key;
     el.innerHTML = '';
-    list.forEach((p, i) => {
-      const s=t2m(p.start), e=t2m(p.end);
-      const isCur=i===curIdx, isPast=now>=e&&!isCur;
-      const d=document.createElement('div');
-      d.className='pr'+(p.isBreak?' brk':'')+(p.isEod?' eod':'')+(isCur?' current':isPast?' past':' future');
-      d.dataset.idx = i;
-      if (isCur) {
-        const pct = Math.min(100, Math.round(((now-s)/(e-s))*100));
-        d.style.setProperty('--pct', pct+'%');
+    slots.forEach((slot, si) => {
+      const d = document.createElement('div');
+      d.dataset.idx = si;
+
+      if (!slot.linked) {
+        // Single block — same rendering as before
+        const p = slot, s = t2m(p.start), e = t2m(p.end);
+        const isCur = si === curSlotIdx, isPast = now >= e && !isCur;
+        d.className = 'pr' + (p.isBreak ? ' brk' : '') + (p.isEod ? ' eod' : '') + (isCur ? ' current' : isPast ? ' past' : ' future');
+        if (isCur) {
+          const pct = Math.min(100, Math.round(((now - s) / (e - s)) * 100));
+          d.style.setProperty('--pct', pct + '%');
+        }
+        const lock = p.isEod ? '<span class="eod-tag">&#x25CF; end of day</span>' : '';
+        d.innerHTML = '<div class="prt">' + fmt(p.start) + '</div>'
+          + '<div class="prn">' + (isCur ? '<span class="ndot"></span>' : '') + p.name + lock + '</div>'
+          + '<div class="pre">' + fmt(p.end) + '</div>';
+        el.appendChild(d);
+        return;
       }
-      const lock=p.isEod?'<span class="eod-tag">&#x25CF; end of day</span>':'';
-      d.innerHTML='<div class="prt">'+fmt(p.start)+'</div>'
-        +'<div class="prn">'+(isCur?'<span class="ndot"></span>':'')+p.name+lock+'</div>'
-        +'<div class="pre">'+fmt(p.end)+'</div>';
+
+      // Linked slot — one .pr.linked container with N .pr-sub rows,
+      // each with its own independent past/current/future state
+      const slotIsCurrent = si === curSlotIdx;
+      d.className = 'pr linked' + (slotIsCurrent ? ' current' : '');
+      d.style.flex = slot.blocks.length; // claim N rows' worth of vertical space
+      slot.blocks.forEach((b, bi) => {
+        const bs = t2m(b.start), be = t2m(b.end);
+        const bRunning = now >= bs && now < be;
+        const bPast = now >= be;
+        const state = bRunning ? 'current' : bPast ? 'past' : 'future';
+        const sub = document.createElement('div');
+        sub.className = 'pr-sub ' + state;
+        sub.dataset.sub = bi;
+        if (bRunning) {
+          const pct = Math.min(100, Math.round(((now - bs) / (be - bs)) * 100));
+          sub.style.setProperty('--pct', pct + '%');
+        }
+        sub.innerHTML = '<div class="prt">' + fmt(b.start) + '</div>'
+          + '<div class="prn">' + (bRunning ? '<span class="ndot"></span>' : '') + b.name + '</div>'
+          + '<div class="pre">' + fmt(b.end) + '</div>';
+        d.appendChild(sub);
+      });
       el.appendChild(d);
     });
     return true;
   }
 
-  if (curIdx >= 0) {
-    const p = list[curIdx];
-    const s=t2m(p.start), e=t2m(p.end);
-    const pct = Math.min(100, Math.round(((now-s)/(e-s))*100));
-    const curRow = el.querySelector('.pr.current');
-    if (curRow) curRow.style.setProperty('--pct', pct+'%');
+  // Live tick — just update progress fills on any currently-running blocks.
+  // For linked slots, we may need to re-flow state (a sub-row just ended
+  // while its siblings are still running). Check each current slot's subs
+  // and mark state changes by forcing a rebuild if needed.
+  if (curSlotIdx >= 0) {
+    const slot = slots[curSlotIdx];
+    const slotEl = el.querySelector('.pr[data-idx="' + curSlotIdx + '"]');
+    if (!slotEl) return false;
+
+    if (!slot.linked) {
+      const p = slot, s = t2m(p.start), e = t2m(p.end);
+      const pct = Math.min(100, Math.round(((now - s) / (e - s)) * 100));
+      slotEl.style.setProperty('--pct', pct + '%');
+      return false;
+    }
+
+    // Linked slot: check whether any sub's state has changed since last render
+    let stateChanged = false;
+    slot.blocks.forEach((b, bi) => {
+      const bs = t2m(b.start), be = t2m(b.end);
+      const bRunning = now >= bs && now < be;
+      const bPast = now >= be;
+      const newState = bRunning ? 'current' : bPast ? 'past' : 'future';
+      const sub = slotEl.querySelector('.pr-sub[data-sub="' + bi + '"]');
+      if (!sub) return;
+      if (!sub.classList.contains(newState)) stateChanged = true;
+      if (bRunning) {
+        const pct = Math.min(100, Math.round(((now - bs) / (be - bs)) * 100));
+        sub.style.setProperty('--pct', pct + '%');
+      }
+    });
+    if (stateChanged) {
+      // One sub-row transitioned; force rebuild so the class swap happens cleanly
+      _lastActiveIdx = -2;
+      renderSchedule(list, true);
+      return true;
+    }
   }
   return false;
 }
@@ -936,13 +1301,11 @@ function renderCardTick() {
   const list = buildList(blocks, eod);
   if (!list || !list.length) return;
 
+  const slots = buildSlots(list);
   const now = nowM();
-  let curIdx = -1;
-  for (let i=0;i<list.length;i++) {
-    if (now>=t2m(list[i].start) && now<t2m(list[i].end)) { curIdx=i; break; }
-  }
+  const curSlotIdx = findCurrentSlot(slots, now);
 
-  if (curIdx === -1) {
+  if (curSlotIdx === -1) {
     if (renderCardTick._wasActive) {
       renderCardTick._wasActive = false;
       _lastActiveIdx = -2;
@@ -952,8 +1315,8 @@ function renderCardTick() {
     return;
   }
 
-  const justSwitched = renderCardTick._lastCurIdx !== curIdx;
-  renderCardTick._lastCurIdx = curIdx;
+  const justSwitched = renderCardTick._lastCurIdx !== curSlotIdx;
+  renderCardTick._lastCurIdx = curSlotIdx;
   renderCardTick._wasActive = true;
 
   if (justSwitched) {
@@ -974,8 +1337,11 @@ function renderCardTick() {
 
   const curRow = document.querySelector('.pr.current');
   if (!curRow) return;
-  const p = list[curIdx];
-  const remaining = (t2m(p.end) - now) * 60;
+  // For linked slots, fire the shrinking animation when the LAST block in
+  // the slot is about to end — that's when the slot itself is ending.
+  const slot = slots[curSlotIdx];
+  const slotEnd = slot.linked ? slot.slotEnd : t2m(slot.end);
+  const remaining = (slotEnd - now) * 60;
   if (remaining <= 1) {
     curRow.classList.add('shrinking');
   } else {
