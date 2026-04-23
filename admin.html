@@ -366,14 +366,33 @@ function deriveSlots(hex) {
     const nums = rgbStr.match(/\d+/g).map(Number);
     return '#' + nums.map(n => n.toString(16).padStart(2,'0')).join('');
   }
+  // Read the base color's own lightness and saturation so we can shift
+  // relative to it. Must stay in sync with deriveSlots() in index.html.
+  const maxC = Math.max(r,g,b), minC = Math.min(r,g,b);
+  const baseL = ((maxC + minC) / 2) * 100;
+  let baseS = 0;
+  if (maxC !== minC) {
+    const d = maxC - minC;
+    baseS = (baseL > 50 ? d / (2 - maxC - minC) : d / (maxC + minC)) * 100;
+  }
+
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  const panelL    = clamp(baseL, 6, 35);
+  const bgL       = clamp(panelL - 6, 2, 30);
+  const cardL     = clamp(panelL + 10, 12, 55);
+  const accentL   = clamp(panelL + 45, 55, 75);
+  const mutedL    = clamp(panelL + 30, 40, 70);
+  const panelSat  = clamp(baseS, 8, 70);
+  const accentSat = clamp(baseS + 20, 40, 85);
+
   return {
-    bg:        rgbToHex(hsl(h, 22, 5)),
-    panel:     rgbToHex(hsl(h, 18, 10)),
-    cardBg:    rgbToHex(hsl(h, 40, 18)),
-    accentBg:  rgbToHex(hsl(h, 40, 18)),
-    accent:    hex,
+    bg:        rgbToHex(hsl(h, panelSat, bgL)),
+    panel:     rgbToHex(hsl(h, panelSat, panelL)),
+    cardBg:    rgbToHex(hsl(h, panelSat + 5, cardL)),
+    accentBg:  rgbToHex(hsl(h, panelSat + 5, cardL)),
+    accent:    rgbToHex(hsl(h, accentSat, accentL)),
     text:      '#f0ebe0',
-    textMuted: rgbToHex(hsl(h, 20, 63))
+    textMuted: rgbToHex(hsl(h, clamp(baseS - 5, 10, 40), mutedL))
   };
 }
 
