@@ -199,55 +199,32 @@ html, body {
 }
 
 /* ── LINKED SLOT ──
-   A linked slot is one .pr.linked container holding multiple .pr-sub
-   rows. The container takes roughly N rows' worth of flex space so
-   the list rhythm stays consistent. Each sub-row gets its own
-   past/current/future state class. */
+   A linked slot occupies the same vertical space as a single block
+   (flex: 1) with a shared outline around its sub-rows. Sub-rows are
+   staggered horizontally to reflect start/end time offsets, and
+   shrunk vertically to fit two within one row's height. The shared
+   border and left accent bar visually group them as one slot. */
 .pr.linked {
   display: flex;
   flex-direction: column;
-  padding: 0;
-  gap: 0;
-  background: transparent;
-  border: none;
-  overflow: visible;
-}
-.pr.linked::before { display: none; }
-
-.pr-sub {
-  display: grid;
-  grid-template-columns: minmax(0, 5.5rem) 1fr minmax(0, 5.5rem);
-  align-items: center;
-  gap: .5rem;
-  padding: 0 .9rem;
+  justify-content: center;
+  padding: .35rem .5rem;
+  gap: .2rem;
+  background: var(--panel2);
+  border: 0.5px solid var(--border2);
   border-radius: 10px;
-  border: 0.5px solid transparent;
-  position: relative;
   overflow: hidden;
   flex: 1;
   min-height: 0;
+  position: relative;
   transition: background 1s ease, border-color 1s ease;
-  margin-bottom: 2px;
-  align-self: flex-start;
-  box-sizing: border-box;
 }
-.pr-sub:last-child { margin-bottom: 0; }
-
-.pr-sub.past {
-  opacity: .18;
-  background: var(--bg);
-  filter: saturate(0);
-}
-.pr-sub.future {
-  background: var(--panel2);
-  border-color: var(--border2);
-}
-.pr-sub.current {
-  --pct: 0%;
-  background: linear-gradient(to right, var(--blue-bg) var(--pct), var(--blue-dark) var(--pct));
+.pr.linked.current {
+  background: var(--blue-dark);
   border-color: var(--blue-border);
+  padding: .35rem .5rem;
 }
-.pr-sub.current::before {
+.pr.linked.current::before {
   content: '';
   position: absolute;
   left: 0;
@@ -258,10 +235,38 @@ html, body {
   border-radius: 0 3px 3px 0;
 }
 
-.pr-sub .prt { font-size: clamp(.55rem, 1.1vw, 1rem); color: #8a8578; white-space: nowrap; }
-.pr-sub .prn { font-size: clamp(.65rem, 1.2vw, 1.1rem); color: #c8c2b4; white-space: nowrap; overflow: hidden; }
-.pr-sub .pre { font-size: clamp(.55rem, 1.1vw, 1rem); color: #8a8578; text-align: right; white-space: nowrap; justify-self: end; width: 100%; }
-.pr-sub.current .prn { color: #f0ebe0; font-weight: 500; font-size: clamp(.9rem, 1.8vw, 1.5rem); }
+.pr-sub {
+  display: grid;
+  grid-template-columns: minmax(0, 4.5rem) 1fr minmax(0, 4.5rem);
+  align-items: center;
+  gap: .4rem;
+  padding: .1rem .6rem;
+  border-radius: 6px;
+  border: 0.5px solid transparent;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  transition: background 1s ease, border-color 1s ease;
+  align-self: flex-start;
+  box-sizing: border-box;
+}
+
+.pr-sub.past {
+  opacity: .25;
+  filter: saturate(0);
+}
+.pr-sub.future {
+  background: transparent;
+}
+.pr-sub.current {
+  --pct: 0%;
+  background: linear-gradient(to right, var(--blue-bg) var(--pct), transparent var(--pct));
+}
+
+.pr-sub .prt { font-size: clamp(.5rem, .95vw, .85rem); color: #8a8578; white-space: nowrap; }
+.pr-sub .prn { font-size: clamp(.6rem, 1.05vw, .95rem); color: #c8c2b4; white-space: nowrap; overflow: hidden; }
+.pr-sub .pre { font-size: clamp(.5rem, .95vw, .85rem); color: #8a8578; text-align: right; white-space: nowrap; justify-self: end; width: 100%; }
+.pr-sub.current .prn { color: #f0ebe0; font-weight: 500; font-size: clamp(.65rem, 1.2vw, 1.1rem); }
 
 /* ── SPLIT NOW-IN-SESSION CARD ──
    When the current slot is linked, the card shows one shared label
@@ -1121,7 +1126,6 @@ function renderSchedule(list, forceRebuild) {
       // each with its own independent past/current/future state
       const slotIsCurrent = si === curSlotIdx;
       d.className = 'pr linked' + (slotIsCurrent ? ' current' : '');
-      d.style.flex = slot.blocks.length;
       const slotRange = slot.slotEnd - slot.slotStart;
       slot.blocks.forEach((b, bi) => {
         const bs = t2m(b.start), be = t2m(b.end);
