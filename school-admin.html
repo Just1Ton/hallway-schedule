@@ -65,8 +65,9 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 
 /* ── SCHEDULE BLOCK ROW ──
    Each time block is a row with name, start time, end time, and remove button */
-.srow{display:grid;grid-template-columns:1fr 76px 76px 26px;gap:.35rem;align-items:center;margin-bottom:.35rem;}
-.srow input{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
+.srow{display:grid;grid-template-columns:22px 1fr 76px 76px 26px;gap:.35rem;align-items:center;margin-bottom:.35rem;}
+.srow input[type="text"],.srow input[type="time"]{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
+.srow input[type="checkbox"]{width:14px;height:14px;cursor:pointer;accent-color:var(--blue-mid);justify-self:center;margin:0;}
 
 /* ── REMOVE BUTTON ── */
 .rmv-btn{background:transparent;border:0.5px solid #3a2a2a;border-radius:5px;color:#6a3a3a;font-size:.9rem;cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -322,7 +323,9 @@ function buildOverridePed(i) {
   ov.blocks.forEach((p, bi) => {
     const r = document.createElement('div');
     r.className = 'srow';
-    r.innerHTML = '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="ovbn-' + i + '-' + bi + '">'
+    const linkCell = bi === 0 ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="ovbl-' + i + '-' + bi + '">';
+    r.innerHTML = linkCell
+      + '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="ovbn-' + i + '-' + bi + '">'
       + '<input type="time" value="' + p.start + '" id="ovbs-' + i + '-' + bi + '">'
       + '<input type="time" value="' + p.end + '" id="ovbe-' + i + '-' + bi + '">'
       + '<button class="rmv-btn" onclick="removeOverrideBlock(' + i + ',' + bi + ')">&minus;</button>';
@@ -377,12 +380,17 @@ function syncOverrideFields(i) {
   const dvd = document.getElementById('ovd-' + i), dvl = document.getElementById('ovl-' + i);
   if (dvd) ov.date = dvd.value;
   if (dvl) ov.label = dvl.value.trim();
-  ov.blocks = ov.blocks.map((p, bi) => ({
-    name: (document.getElementById('ovbn-' + i + '-' + bi) || { value: p.name }).value.trim() || p.name,
-    start: (document.getElementById('ovbs-' + i + '-' + bi) || { value: p.start }).value || p.start,
-    end: (document.getElementById('ovbe-' + i + '-' + bi) || { value: p.end }).value || p.end,
-    isBreak: p.isBreak
-  }));
+  ov.blocks.forEach((p, bi) => {
+    const r = document.createElement('div');
+    r.className = 'srow';
+    const linkCell = bi === 0 ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="ovbl-' + i + '-' + bi + '">';
+    r.innerHTML = linkCell
+      + '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="ovbn-' + i + '-' + bi + '">'
+      + '<input type="time" value="' + p.start + '" id="ovbs-' + i + '-' + bi + '">'
+      + '<input type="time" value="' + p.end + '" id="ovbe-' + i + '-' + bi + '">'
+      + '<button class="rmv-btn" onclick="removeOverrideBlock(' + i + ',' + bi + ')">&minus;</button>';
+    el.appendChild(r);
+  });
   const en = document.getElementById('oveodn-' + i), ee = document.getElementById('oveode-' + i);
   if (en) ov.eod.name = en.value.trim() || ov.eod.name;
   if (ee) ov.eod.end = ee.value || ov.eod.end;
