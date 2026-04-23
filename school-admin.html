@@ -380,17 +380,13 @@ function syncOverrideFields(i) {
   const dvd = document.getElementById('ovd-' + i), dvl = document.getElementById('ovl-' + i);
   if (dvd) ov.date = dvd.value;
   if (dvl) ov.label = dvl.value.trim();
-  ov.blocks.forEach((p, bi) => {
-    const r = document.createElement('div');
-    r.className = 'srow';
-    const linkCell = bi === 0 ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="ovbl-' + i + '-' + bi + '">';
-    r.innerHTML = linkCell
-      + '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="ovbn-' + i + '-' + bi + '">'
-      + '<input type="time" value="' + p.start + '" id="ovbs-' + i + '-' + bi + '">'
-      + '<input type="time" value="' + p.end + '" id="ovbe-' + i + '-' + bi + '">'
-      + '<button class="rmv-btn" onclick="removeOverrideBlock(' + i + ',' + bi + ')">&minus;</button>';
-    el.appendChild(r);
-  });
+  ov.blocks = ov.blocks.map((p, bi) => ({
+    name: (document.getElementById('ovbn-' + i + '-' + bi) || { value: p.name }).value.trim() || p.name,
+    start: (document.getElementById('ovbs-' + i + '-' + bi) || { value: p.start }).value || p.start,
+    end: (document.getElementById('ovbe-' + i + '-' + bi) || { value: p.end }).value || p.end,
+    isBreak: p.isBreak,
+    linkPrev: bi === 0 ? false : (document.getElementById('ovbl-' + i + '-' + bi) || { checked: !!p.linkPrev }).checked
+  }));
   const en = document.getElementById('oveodn-' + i), ee = document.getElementById('oveode-' + i);
   if (en) ov.eod.name = en.value.trim() || ov.eod.name;
   if (ee) ov.eod.end = ee.value || ov.eod.end;
