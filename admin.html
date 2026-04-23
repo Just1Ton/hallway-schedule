@@ -453,14 +453,11 @@ function renderSlotPickers() {
 
 // Resets the entire theme back to the display's original default colors.
 // Same as setting the base to #111827 and re-deriving everything.
-function resetToDefault() {
-  if (!confirm('Reset all colors to default? This cannot be undone (until you click Cancel instead of Save).')) return;
-  customizeBase = '#111827';
-  customizeSlots = deriveSlots(customizeBase);
-  document.getElementById('base-color-picker').value = customizeBase;
-  document.getElementById('base-color-hex').value = customizeBase;
-  renderSlotPickers();
-  updatePreview();
+async function resetToDefault() {
+  if (!confirm('Reset to the original built-in colors? This will save immediately and close.')) return;
+  await db.from('schools').update({ theme: null }).eq('id', customizeSchoolId);
+  closeCustomize();
+  showSuccess();
 }
 
 function toggleAdvanced() {
