@@ -78,8 +78,9 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .mf select{width:100%;cursor:pointer;}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
 .esec{font-size:.66rem;color:#3a4a5a;letter-spacing:.1em;text-transform:uppercase;margin:1rem 0 .45rem;padding-bottom:.25rem;border-bottom:0.5px solid #1a2535;}
-.srow{display:grid;grid-template-columns:1fr 76px 76px 26px;gap:.35rem;align-items:center;margin-bottom:.35rem;}
-.srow input{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
+.srow{display:grid;grid-template-columns:22px 1fr 76px 76px 26px;gap:.35rem;align-items:center;margin-bottom:.35rem;}
+.srow input[type="text"],.srow input[type="time"]{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
+.srow input[type="checkbox"]{width:14px;height:14px;cursor:pointer;accent-color:var(--blue-mid);justify-self:center;margin:0;}
 .rmv-btn{background:transparent;border:0.5px solid #3a2a2a;border-radius:5px;color:#6a3a3a;font-size:.9rem;cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .rmv-btn:hover{background:#2a1515;color:#c05050;}
 .add-btn{background:#0a1a0a;border:0.5px solid #1a3a1a;border-radius:7px;color:#3a7a4a;font-family:'DM Mono',monospace;font-size:.72rem;padding:.38rem .85rem;cursor:pointer;width:100%;margin-top:.3rem;}
@@ -766,7 +767,8 @@ function buildDayBlockRows(idx) {
   modalDays[idx].forEach((p, i) => {
     const r = document.createElement('div');
     r.className = 'srow';
-    r.innerHTML = '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="dpn-' + idx + '-' + i + '"><input type="time" value="' + p.start + '" id="dps-' + idx + '-' + i + '"><input type="time" value="' + p.end + '" id="dpe-' + idx + '-' + i + '"><button class="rmv-btn" onclick="removeDayBlock(' + idx + ',' + i + ')">&minus;</button>';
+    const linkCell = i === 0 ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="dpl-' + idx + '-' + i + '">';
+    r.innerHTML = linkCell + '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="dpn-' + idx + '-' + i + '"><input type="time" value="' + p.start + '" id="dps-' + idx + '-' + i + '"><input type="time" value="' + p.end + '" id="dpe-' + idx + '-' + i + '"><button class="rmv-btn" onclick="removeDayBlock(' + idx + ',' + i + ')">&minus;</button>';
     el.appendChild(r);
   });
   const lastEnd = modalDays[idx].length ? modalDays[idx][modalDays[idx].length - 1].end : '08:00';
@@ -798,7 +800,8 @@ function syncDayFields(idx) {
     name: (document.getElementById('dpn-' + idx + '-' + i) || { value: p.name }).value.trim() || p.name,
     start: (document.getElementById('dps-' + idx + '-' + i) || { value: p.start }).value || p.start,
     end: (document.getElementById('dpe-' + idx + '-' + i) || { value: p.end }).value || p.end,
-    isBreak: p.isBreak
+    isBreak: p.isBreak,
+    linkPrev: i === 0 ? false : (document.getElementById('dpl-' + idx + '-' + i) || { checked: !!p.linkPrev }).checked
   }));
   const en = document.getElementById('eodn-' + idx);
   const ee = document.getElementById('eode-' + idx);
@@ -878,7 +881,8 @@ function buildWADVariantRows(wadIdx, variantIdx) {
   variant.blocks.forEach((p, bi) => {
     const r = document.createElement('div');
     r.className = 'srow';
-    r.innerHTML = '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="wadvarbn-' + wadIdx + '-' + variantIdx + '-' + bi + '"><input type="time" value="' + p.start + '" id="wadvarbs-' + wadIdx + '-' + variantIdx + '-' + bi + '"><input type="time" value="' + p.end + '" id="wadvarbe-' + wadIdx + '-' + variantIdx + '-' + bi + '"><button class="rmv-btn" onclick="removeWADVariantBlock(' + wadIdx + ',' + variantIdx + ',' + bi + ')">&minus;</button>';
+    const linkCell = bi === 0 ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="wadvarbl-' + wadIdx + '-' + variantIdx + '-' + bi + '">';
+    r.innerHTML = linkCell + '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="wadvarbn-' + wadIdx + '-' + variantIdx + '-' + bi + '"><input type="time" value="' + p.start + '" id="wadvarbs-' + wadIdx + '-' + variantIdx + '-' + bi + '"><input type="time" value="' + p.end + '" id="wadvarbe-' + wadIdx + '-' + variantIdx + '-' + bi + '"><button class="rmv-btn" onclick="removeWADVariantBlock(' + wadIdx + ',' + variantIdx + ',' + bi + ')">&minus;</button>';
     el.appendChild(r);
   });
 }
@@ -906,7 +910,8 @@ function syncWADVariantFields(wadIdx, variantIdx) {
     name: (document.getElementById('wadvarbn-' + wadIdx + '-' + variantIdx + '-' + bi) || { value: p.name }).value.trim() || p.name,
     start: (document.getElementById('wadvarbs-' + wadIdx + '-' + variantIdx + '-' + bi) || { value: p.start }).value || p.start,
     end: (document.getElementById('wadvarbe-' + wadIdx + '-' + variantIdx + '-' + bi) || { value: p.end }).value || p.end,
-    isBreak: p.isBreak
+    isBreak: p.isBreak,
+    linkPrev: bi === 0 ? false : (document.getElementById('wadvarbl-' + wadIdx + '-' + variantIdx + '-' + bi) || { checked: !!p.linkPrev }).checked
   }));
   const en = document.getElementById('wadvareodn-' + wadIdx + '-' + variantIdx);
   const ee = document.getElementById('wadvareode-' + wadIdx + '-' + variantIdx);
@@ -1013,7 +1018,8 @@ function buildOverridePed(i) {
   ov.blocks.forEach((p, bi) => {
     const r = document.createElement('div');
     r.className = 'srow';
-    r.innerHTML = '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="ovbn-' + i + '-' + bi + '"><input type="time" value="' + p.start + '" id="ovbs-' + i + '-' + bi + '"><input type="time" value="' + p.end + '" id="ovbe-' + i + '-' + bi + '"><button class="rmv-btn" onclick="removeOverrideBlock(' + i + ',' + bi + ')">&minus;</button>';
+    const linkCell = bi === 0 ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="ovbl-' + i + '-' + bi + '">';
+    r.innerHTML = linkCell + '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="ovbn-' + i + '-' + bi + '"><input type="time" value="' + p.start + '" id="ovbs-' + i + '-' + bi + '"><input type="time" value="' + p.end + '" id="ovbe-' + i + '-' + bi + '"><button class="rmv-btn" onclick="removeOverrideBlock(' + i + ',' + bi + ')">&minus;</button>';
     el.appendChild(r);
   });
 }
@@ -1042,7 +1048,8 @@ function syncOverrideFields(i) {
     name: (document.getElementById('ovbn-' + i + '-' + bi) || { value: p.name }).value.trim() || p.name,
     start: (document.getElementById('ovbs-' + i + '-' + bi) || { value: p.start }).value || p.start,
     end: (document.getElementById('ovbe-' + i + '-' + bi) || { value: p.end }).value || p.end,
-    isBreak: p.isBreak
+    isBreak: p.isBreak,
+    linkPrev: bi === 0 ? false : (document.getElementById('ovbl-' + i + '-' + bi) || { checked: !!p.linkPrev }).checked
   }));
   const en = document.getElementById('oveodn-' + i), ee = document.getElementById('oveode-' + i);
   if (en) ov.eod.name = en.value.trim() || ov.eod.name;
