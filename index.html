@@ -223,6 +223,13 @@ html, body {
   border-color: var(--blue-border);
   padding: .35rem .5rem;
 }
+/* When the whole linked slot is past, drop the container's outline and fill
+   — the sub-rows inside are styled as past individually, so you see staggered
+   darkened bars floating on the panel, matching the look of regular past rows. */
+.pr.linked:not(.current):not(:has(.pr-sub.future)):not(:has(.pr-sub.current)) {
+  background: transparent;
+  border-color: transparent;
+}
 .pr.linked.current::before {
   content: '';
   position: absolute;
