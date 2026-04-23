@@ -1132,8 +1132,9 @@ function renderSchedule(list, forceRebuild) {
         if (slotRange > 0) {
           const leftPct = ((bs - slot.slotStart) / slotRange) * 100;
           const rightPct = ((slot.slotEnd - be) / slotRange) * 100;
+          const widthPct = 100 - leftPct - rightPct;
+          sub.style.width = widthPct.toFixed(2) + '%';
           if (leftPct > 0.1) sub.style.marginLeft = leftPct.toFixed(2) + '%';
-          if (rightPct > 0.1) sub.style.marginRight = rightPct.toFixed(2) + '%';
         }
         if (bRunning) {
           const pct = Math.min(100, Math.round(((now - bs) / (be - bs)) * 100));
