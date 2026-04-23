@@ -811,110 +811,6 @@ function findCurrentSlot(slots, now) {
   return -1;
 }
 
-// Groups consecutive blocks with linkPrev:true into linked slots.
-// Returns an array where each element is either a single block or
-// a {linked:true, blocks:[...]} group. Downstream code iterates slots.
-// slotStart = earliest start in group, slotEnd = latest end in group —
-// used for slot-level past/current/future state.
-function buildSlots(list) {
-  const slots = [];
-  list.forEach((block, i) => {
-    if (i > 0 && block.linkPrev && slots.length) {
-      const prev = slots[slots.length - 1];
-      if (prev.linked) {
-        prev.blocks.push(block);
-      } else {
-        slots[slots.length - 1] = { linked: true, blocks: [prev, block] };
-      }
-    } else {
-      slots.push(block);
-    }
-  });
-  return slots.map(s => {
-    if (!s.linked) return s;
-    const starts = s.blocks.map(b => t2m(b.start));
-    const ends = s.blocks.map(b => t2m(b.end));
-    return Object.assign({}, s, {
-      slotStart: Math.min.apply(null, starts),
-      slotEnd: Math.max.apply(null, ends)
-    });
-  });
-}
-
-// Returns slot-level state: 'past' | 'current' | 'future' | 'upcoming-gap'
-// 'current' = any block in the slot is running OR we're inside its time window
-function slotState(slot, now) {
-  if (slot.linked) {
-    if (now < slot.slotStart) return 'future';
-    if (now >= slot.slotEnd) return 'past';
-    return 'current';
-  }
-  const s = t2m(slot.start), e = t2m(slot.end);
-  if (now < s) return 'future';
-  if (now >= e) return 'past';
-  return 'current';
-}
-
-// Returns the index of the currently-active slot in a slot array, or -1
-function findCurrentSlot(slots, now) {
-  for (let i = 0; i < slots.length; i++) {
-    if (slotState(slots[i], now) === 'current') return i;
-  }
-  return -1;
-}
-
-// Groups consecutive blocks with linkPrev:true into linked slots.
-// Returns an array where each element is either a single block or
-// a {linked:true, blocks:[...]} group. Downstream code iterates slots.
-// slotStart = earliest start in group, slotEnd = latest end in group —
-// used for slot-level past/current/future state.
-function buildSlots(list) {
-  const slots = [];
-  list.forEach((block, i) => {
-    if (i > 0 && block.linkPrev && slots.length) {
-      const prev = slots[slots.length - 1];
-      if (prev.linked) {
-        prev.blocks.push(block);
-      } else {
-        slots[slots.length - 1] = { linked: true, blocks: [prev, block] };
-      }
-    } else {
-      slots.push(block);
-    }
-  });
-  return slots.map(s => {
-    if (!s.linked) return s;
-    const starts = s.blocks.map(b => t2m(b.start));
-    const ends = s.blocks.map(b => t2m(b.end));
-    return Object.assign({}, s, {
-      slotStart: Math.min.apply(null, starts),
-      slotEnd: Math.max.apply(null, ends)
-    });
-  });
-}
-
-// Returns slot-level state: 'past' | 'current' | 'future' | 'upcoming-gap'
-// 'current' = any block in the slot is running OR we're inside its time window
-function slotState(slot, now) {
-  if (slot.linked) {
-    if (now < slot.slotStart) return 'future';
-    if (now >= slot.slotEnd) return 'past';
-    return 'current';
-  }
-  const s = t2m(slot.start), e = t2m(slot.end);
-  if (now < s) return 'future';
-  if (now >= e) return 'past';
-  return 'current';
-}
-
-// Returns the index of the currently-active slot in a slot array, or -1
-function findCurrentSlot(slots, now) {
-  for (let i = 0; i < slots.length; i++) {
-    if (slotState(slots[i], now) === 'current') return i;
-  }
-  return -1;
-}
-
 function getActiveSchedule() {
   const ov = getOverrideForToday();
   if (ov) return { blocks: ov.blocks, eod: ov.eod, label: ov.label, isOverride: true };
@@ -1223,62 +1119,26 @@ function renderSchedule(list, forceRebuild) {
       // each with its own independent past/current/future state
       const slotIsCurrent = si === curSlotIdx;
       d.className = 'pr linked' + (slotIsCurrent ? ' current' : '');
-      function renderCardTick() {
-  const active = getActiveSchedule();
-  if (!active) return;
-  const { blocks, eod } = active;
-  const list = buildList(blocks, eod);
-  if (!list || !list.length) return;
-
-  const slots = buildSlots(list);
-  const now = nowM();
-  const curSlotIdx = findCurrentSlot(slots, now);
-
-  if (curSlotIdx === -1) {
-    if (renderCardTick._wasActive) {
-      renderCardTick._wasActive = false;
-      _lastActiveIdx = -2;
-      renderDisplay();
-    }
-    renderCard(list);
-    return;
-  }
-
-  const justSwitched = renderCardTick._lastCurIdx !== curSlotIdx;
-  renderCardTick._lastCurIdx = curSlotIdx;
-  renderCardTick._wasActive = true;
-
-  if (justSwitched) {
-    _lastActiveIdx = -2;
-    renderDisplay();
-    setTimeout(() => {
-      const curRow = document.querySelector('.pr.current');
-      if (!curRow) return;
-      curRow.classList.add('shrinking');
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        curRow.classList.remove('shrinking');
-      }));
-    }, 50);
-    return;
-  }
-
-  renderCard(list);
-
-  const curRow = document.querySelector('.pr.current');
-  if (!curRow) return;
-  // For linked slots, fire the shrinking animation when the LAST block in
-  // the slot is about to end — that's when the slot itself is ending.
-  const slot = slots[curSlotIdx];
-  const slotEnd = slot.linked ? slot.slotEnd : t2m(slot.end);
-  const remaining = (slotEnd - now) * 60;
-  if (remaining <= 1) {
-    curRow.classList.add('shrinking');
-  } else {
-    curRow.classList.remove('shrinking');
-  }
-}
-renderCardTick._wasActive = false;
-renderCardTick._lastCurIdx = -1;
+      d.style.flex = slot.blocks.length;
+      const slotRange = slot.slotEnd - slot.slotStart;
+      slot.blocks.forEach((b, bi) => {
+        const bs = t2m(b.start), be = t2m(b.end);
+        const bRunning = now >= bs && now < be;
+        const bPast = now >= be;
+        const state = bRunning ? 'current' : bPast ? 'past' : 'future';
+        const sub = document.createElement('div');
+        sub.className = 'pr-sub ' + state;
+        sub.dataset.sub = bi;
+        if (slotRange > 0) {
+          const leftPct = ((bs - slot.slotStart) / slotRange) * 100;
+          const rightPct = ((slot.slotEnd - be) / slotRange) * 100;
+          if (leftPct > 0.1) sub.style.marginLeft = leftPct.toFixed(2) + '%';
+          if (rightPct > 0.1) sub.style.marginRight = rightPct.toFixed(2) + '%';
+        }
+        if (bRunning) {
+          const pct = Math.min(100, Math.round(((now - bs) / (be - bs)) * 100));
+          sub.style.setProperty('--pct', pct + '%');
+        }
         sub.innerHTML = '<div class="prt">' + fmt(b.start) + '</div>'
           + '<div class="prn">' + (bRunning ? '<span class="ndot"></span>' : '') + b.name + '</div>'
           + '<div class="pre">' + fmt(b.end) + '</div>';
