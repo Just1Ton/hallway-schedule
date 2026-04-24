@@ -64,14 +64,23 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .ns-row input{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
 
 /* ── SCHEDULE BLOCK ROW ──
-   Each time block is a row with name, start time, end time, and remove button */
-.srow{display:grid;grid-template-columns:22px 1fr 76px 76px 26px;gap:.35rem;align-items:center;margin-bottom:.35rem;}
+   Each time block is a row with link-checkbox, name, start, end,
+   up/down/duplicate buttons, and remove button */
+.srow{display:grid;grid-template-columns:22px 1fr 90px 90px 20px 20px 20px 20px;gap:.3rem;align-items:center;margin-bottom:.35rem;}
 .srow input[type="text"],.srow input[type="time"]{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
 .srow input[type="checkbox"]{width:14px;height:14px;cursor:pointer;accent-color:var(--blue-mid);justify-self:center;margin:0;}
 
 /* ── REMOVE BUTTON ── */
-.rmv-btn{background:transparent;border:0.5px solid #3a2a2a;border-radius:5px;color:#6a3a3a;font-size:.9rem;cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rmv-btn{background:transparent;border:0.5px solid #3a2a2a;border-radius:5px;color:#6a3a3a;font-size:.9rem;cursor:pointer;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;}
 .rmv-btn:hover{background:#2a1515;color:#c05050;}
+
+/* ── ROW ACTION BUTTONS (up/down/duplicate) ──
+   Small icon buttons matching rmv-btn's footprint. Arrows hide at the
+   edges of a list (first row: up hidden; last row: down hidden) while
+   still claiming their grid column so row alignment is preserved. */
+.row-btn{background:transparent;border:0.5px solid #2a3a4a;border-radius:5px;color:#4a6080;font-family:'DM Mono',monospace;font-size:.72rem;cursor:pointer;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1;}
+.row-btn:hover{background:#1a2535;color:#7eb8f7;border-color:#2e5080;}
+.row-btn:disabled,.row-btn.hidden{visibility:hidden;pointer-events:none;}
 
 /* ── ADD BUTTON ──
    Full-width green button used to add new rows */
@@ -323,11 +332,17 @@ function buildOverridePed(i) {
   ov.blocks.forEach((p, bi) => {
     const r = document.createElement('div');
     r.className = 'srow';
-    const linkCell = bi === 0 ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="ovbl-' + i + '-' + bi + '">';
+    const isFirst = bi === 0;
+    const isLast = bi === ov.blocks.length - 1;
+    const linkCell = isFirst ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="ovbl-' + i + '-' + bi + '">';
+    const upBtn   = '<button class="row-btn' + (isFirst ? ' hidden' : '') + '" title="Move up" onclick="moveOverrideBlock(' + i + ',' + bi + ',-1)">&uarr;</button>';
+    const downBtn = '<button class="row-btn' + (isLast ? ' hidden' : '') + '" title="Move down" onclick="moveOverrideBlock(' + i + ',' + bi + ',1)">&darr;</button>';
+    const dupBtn  = '<button class="row-btn" title="Duplicate above" onclick="duplicateOverrideBlock(' + i + ',' + bi + ')">&plus;</button>';
     r.innerHTML = linkCell
       + '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="ovbn-' + i + '-' + bi + '">'
       + '<input type="time" value="' + p.start + '" id="ovbs-' + i + '-' + bi + '">'
       + '<input type="time" value="' + p.end + '" id="ovbe-' + i + '-' + bi + '">'
+      + upBtn + downBtn + dupBtn
       + '<button class="rmv-btn" onclick="removeOverrideBlock(' + i + ',' + bi + ')">&minus;</button>';
     el.appendChild(r);
   });
@@ -367,10 +382,37 @@ function addOverrideBlock(i) {
   buildOverridePed(i);
 }
 
-// Removes a time block from a specific override
+// Removes a time block from a specific override. Also clears linkPrev on
+// the block that moves up into the deleted position — it can no longer
+// link to whatever was above the removed block.
 function removeOverrideBlock(i, bi) {
   syncOverrideFields(i);
-  overrides[i].blocks.splice(bi, 1);
+  const blocks = overrides[i].blocks;
+  blocks.splice(bi, 1);
+  if (blocks[bi]) blocks[bi].linkPrev = false;
+  buildOverridePed(i);
+}
+
+// Swaps a block with the one above or below it. Clears linkPrev on both
+// affected blocks to avoid invalid states (a block can't link across a reorder).
+function moveOverrideBlock(i, bi, dir) {
+  syncOverrideFields(i);
+  const blocks = overrides[i].blocks;
+  const j = bi + dir;
+  if (j < 0 || j >= blocks.length) return;
+  const tmp = blocks[bi]; blocks[bi] = blocks[j]; blocks[j] = tmp;
+  blocks[bi].linkPrev = false;
+  blocks[j].linkPrev = false;
+  buildOverridePed(i);
+}
+
+// Inserts a copy of the block ABOVE the original. Duplicate never inherits
+// linkPrev — admin must explicitly re-check the link box if they want it.
+function duplicateOverrideBlock(i, bi) {
+  syncOverrideFields(i);
+  const blocks = overrides[i].blocks;
+  const copy = Object.assign({}, blocks[bi], { linkPrev: false });
+  blocks.splice(bi, 0, copy);
   buildOverridePed(i);
 }
 
