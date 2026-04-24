@@ -635,24 +635,32 @@ function applyTheme(theme) {
 
   const root = document.documentElement;
 
-  // Core named surfaces
+  // Page & panels — --panel2 is used for upcoming schedule rows, so it
+  // must be distinctly darker than --panel (the list container) or rows
+  // vanish into the container. Use bg as the row background.
   root.style.setProperty('--bg',          slots.bg);
   root.style.setProperty('--panel',       slots.panel);
-  root.style.setProperty('--panel2',      slots.panel);
+  root.style.setProperty('--panel2',      slots.bg);
 
-  // Active period highlight + now-card both share the accent background
+  // Active period highlight + now-card share accentBg
   root.style.setProperty('--blue-bg',     slots.accentBg);
+  // --blue-dark is the progress track background — needs to be darker
+  // than --blue-bg so the bar is readable. Use bg which is always the
+  // darkest slot.
   root.style.setProperty('--blue-dark',   slots.bg);
 
-  // Accent color drives the bright elements
+  // --blue-border is used for the progress bar fill AND for active-row
+  // borders. It must be visibly brighter than --blue-bg. Use accent
+  // (the bright highlight color) so the fill reads against the card.
   root.style.setProperty('--blue-accent', slots.accent);
   root.style.setProperty('--blue-mid',    slots.textMuted);
   root.style.setProperty('--blue-dim',    slots.textMuted);
-  root.style.setProperty('--blue-border', slots.accentBg);
+  root.style.setProperty('--blue-border', slots.accent);
 
-  // Borders — subtle, barely visible edges on panels and rows
-  root.style.setProperty('--border',      slots.panel);
-  root.style.setProperty('--border2',     slots.panel);
+  // Row/panel borders — subtle edges. Use accentBg for a touch more
+  // definition than panel-on-panel would give.
+  root.style.setProperty('--border',      slots.accentBg);
+  root.style.setProperty('--border2',     slots.accentBg);
   root.style.setProperty('--muted',       slots.textMuted);
   root.style.setProperty('--text2',       slots.text);
   root.style.setProperty('--text3',       slots.textMuted);
