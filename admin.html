@@ -78,11 +78,14 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .mf select{width:100%;cursor:pointer;}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
 .esec{font-size:.66rem;color:#3a4a5a;letter-spacing:.1em;text-transform:uppercase;margin:1rem 0 .45rem;padding-bottom:.25rem;border-bottom:0.5px solid #1a2535;}
-.srow{display:grid;grid-template-columns:22px 1fr 76px 76px 26px;gap:.35rem;align-items:center;margin-bottom:.35rem;}
+.srow{display:grid;grid-template-columns:22px 1fr 76px 76px 20px 20px 20px 20px;gap:.3rem;align-items:center;margin-bottom:.35rem;}
 .srow input[type="text"],.srow input[type="time"]{padding:.36rem .5rem;font-size:.74rem;background:#0a0e1a;border:0.5px solid #2a3a55;border-radius:5px;color:#c8dff5;font-family:'DM Mono',monospace;width:100%;}
 .srow input[type="checkbox"]{width:14px;height:14px;cursor:pointer;accent-color:var(--blue-mid);justify-self:center;margin:0;}
-.rmv-btn{background:transparent;border:0.5px solid #3a2a2a;border-radius:5px;color:#6a3a3a;font-size:.9rem;cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rmv-btn{background:transparent;border:0.5px solid #3a2a2a;border-radius:5px;color:#6a3a3a;font-size:.9rem;cursor:pointer;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;}
 .rmv-btn:hover{background:#2a1515;color:#c05050;}
+.row-btn{background:transparent;border:0.5px solid #2a3a4a;border-radius:5px;color:#4a6080;font-family:'DM Mono',monospace;font-size:.72rem;cursor:pointer;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1;}
+.row-btn:hover{background:#1a2535;color:#7eb8f7;border-color:#2e5080;}
+.row-btn:disabled,.row-btn.hidden{visibility:hidden;pointer-events:none;}
 .add-btn{background:#0a1a0a;border:0.5px solid #1a3a1a;border-radius:7px;color:#3a7a4a;font-family:'DM Mono',monospace;font-size:.72rem;padding:.38rem .85rem;cursor:pointer;width:100%;margin-top:.3rem;}
 .add-btn:hover{background:#0f2a0f;}
 .eod-row{display:grid;grid-template-columns:1fr 88px;gap:.35rem;align-items:center;margin-bottom:.3rem;}
@@ -764,8 +767,18 @@ function buildDayBlockRows(idx) {
   modalDays[idx].forEach((p, i) => {
     const r = document.createElement('div');
     r.className = 'srow';
-    const linkCell = i === 0 ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="dpl-' + idx + '-' + i + '">';
-    r.innerHTML = linkCell + '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="dpn-' + idx + '-' + i + '"><input type="time" value="' + p.start + '" id="dps-' + idx + '-' + i + '"><input type="time" value="' + p.end + '" id="dpe-' + idx + '-' + i + '"><button class="rmv-btn" onclick="removeDayBlock(' + idx + ',' + i + ')">&minus;</button>';
+    const isFirst = i === 0;
+    const isLast = i === modalDays[idx].length - 1;
+    const linkCell = isFirst ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="dpl-' + idx + '-' + i + '">';
+    const upBtn   = '<button class="row-btn' + (isFirst ? ' hidden' : '') + '" title="Move up" onclick="moveDayBlock(' + idx + ',' + i + ',-1)">&uarr;</button>';
+    const downBtn = '<button class="row-btn' + (isLast ? ' hidden' : '') + '" title="Move down" onclick="moveDayBlock(' + idx + ',' + i + ',1)">&darr;</button>';
+    const dupBtn  = '<button class="row-btn" title="Duplicate above" onclick="duplicateDayBlock(' + idx + ',' + i + ')">&plus;</button>';
+    r.innerHTML = linkCell
+      + '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="dpn-' + idx + '-' + i + '">'
+      + '<input type="time" value="' + p.start + '" id="dps-' + idx + '-' + i + '">'
+      + '<input type="time" value="' + p.end + '" id="dpe-' + idx + '-' + i + '">'
+      + upBtn + downBtn + dupBtn
+      + '<button class="rmv-btn" onclick="removeDayBlock(' + idx + ',' + i + ')">&minus;</button>';
     el.appendChild(r);
   });
   const lastEnd = modalDays[idx].length ? modalDays[idx][modalDays[idx].length - 1].end : '08:00';
@@ -787,6 +800,32 @@ function addDayBlock(idx) {
 function removeDayBlock(idx, i) {
   syncDayFields(idx);
   modalDays[idx].splice(i, 1);
+  // Clear linkPrev on the block that moved up into this position —
+  // it can no longer link to the block that was above the deleted one
+  if (modalDays[idx][i]) modalDays[idx][i].linkPrev = false;
+  buildDayBlockRows(idx);
+}
+
+// Swap a block with the one above/below it. Clears linkPrev on both
+// affected blocks to avoid invalid states (a block can't link across a reorder).
+function moveDayBlock(idx, i, dir) {
+  syncDayFields(idx);
+  const blocks = modalDays[idx];
+  const j = i + dir;
+  if (j < 0 || j >= blocks.length) return;
+  const tmp = blocks[i]; blocks[i] = blocks[j]; blocks[j] = tmp;
+  blocks[i].linkPrev = false;
+  blocks[j].linkPrev = false;
+  buildDayBlockRows(idx);
+}
+
+// Insert a copy of the block ABOVE the original. Duplicate never inherits
+// linkPrev — admin must explicitly re-check the link box if desired.
+function duplicateDayBlock(idx, i) {
+  syncDayFields(idx);
+  const orig = modalDays[idx][i];
+  const copy = Object.assign({}, orig, { linkPrev: false });
+  modalDays[idx].splice(i, 0, copy);
   buildDayBlockRows(idx);
 }
 
@@ -878,8 +917,18 @@ function buildWADVariantRows(wadIdx, variantIdx) {
   variant.blocks.forEach((p, bi) => {
     const r = document.createElement('div');
     r.className = 'srow';
-    const linkCell = bi === 0 ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="wadvarbl-' + wadIdx + '-' + variantIdx + '-' + bi + '">';
-    r.innerHTML = linkCell + '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="wadvarbn-' + wadIdx + '-' + variantIdx + '-' + bi + '"><input type="time" value="' + p.start + '" id="wadvarbs-' + wadIdx + '-' + variantIdx + '-' + bi + '"><input type="time" value="' + p.end + '" id="wadvarbe-' + wadIdx + '-' + variantIdx + '-' + bi + '"><button class="rmv-btn" onclick="removeWADVariantBlock(' + wadIdx + ',' + variantIdx + ',' + bi + ')">&minus;</button>';
+    const isFirst = bi === 0;
+    const isLast = bi === variant.blocks.length - 1;
+    const linkCell = isFirst ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="wadvarbl-' + wadIdx + '-' + variantIdx + '-' + bi + '">';
+    const upBtn   = '<button class="row-btn' + (isFirst ? ' hidden' : '') + '" title="Move up" onclick="moveWADVariantBlock(' + wadIdx + ',' + variantIdx + ',' + bi + ',-1)">&uarr;</button>';
+    const downBtn = '<button class="row-btn' + (isLast ? ' hidden' : '') + '" title="Move down" onclick="moveWADVariantBlock(' + wadIdx + ',' + variantIdx + ',' + bi + ',1)">&darr;</button>';
+    const dupBtn  = '<button class="row-btn" title="Duplicate above" onclick="duplicateWADVariantBlock(' + wadIdx + ',' + variantIdx + ',' + bi + ')">&plus;</button>';
+    r.innerHTML = linkCell
+      + '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="wadvarbn-' + wadIdx + '-' + variantIdx + '-' + bi + '">'
+      + '<input type="time" value="' + p.start + '" id="wadvarbs-' + wadIdx + '-' + variantIdx + '-' + bi + '">'
+      + '<input type="time" value="' + p.end + '" id="wadvarbe-' + wadIdx + '-' + variantIdx + '-' + bi + '">'
+      + upBtn + downBtn + dupBtn
+      + '<button class="rmv-btn" onclick="removeWADVariantBlock(' + wadIdx + ',' + variantIdx + ',' + bi + ')">&minus;</button>';
     el.appendChild(r);
   });
 }
@@ -897,7 +946,28 @@ function addWADVariantBlock(wadIdx, variantIdx) {
 
 function removeWADVariantBlock(wadIdx, variantIdx, bi) {
   syncWADVariantFields(wadIdx, variantIdx);
-  currentData.wads[wadIdx].variants[variantIdx].blocks.splice(bi, 1);
+  const blocks = currentData.wads[wadIdx].variants[variantIdx].blocks;
+  blocks.splice(bi, 1);
+  if (blocks[bi]) blocks[bi].linkPrev = false;
+  buildWADVariantRows(wadIdx, variantIdx);
+}
+
+function moveWADVariantBlock(wadIdx, variantIdx, bi, dir) {
+  syncWADVariantFields(wadIdx, variantIdx);
+  const blocks = currentData.wads[wadIdx].variants[variantIdx].blocks;
+  const j = bi + dir;
+  if (j < 0 || j >= blocks.length) return;
+  const tmp = blocks[bi]; blocks[bi] = blocks[j]; blocks[j] = tmp;
+  blocks[bi].linkPrev = false;
+  blocks[j].linkPrev = false;
+  buildWADVariantRows(wadIdx, variantIdx);
+}
+
+function duplicateWADVariantBlock(wadIdx, variantIdx, bi) {
+  syncWADVariantFields(wadIdx, variantIdx);
+  const blocks = currentData.wads[wadIdx].variants[variantIdx].blocks;
+  const copy = Object.assign({}, blocks[bi], { linkPrev: false });
+  blocks.splice(bi, 0, copy);
   buildWADVariantRows(wadIdx, variantIdx);
 }
 
@@ -1015,8 +1085,18 @@ function buildOverridePed(i) {
   ov.blocks.forEach((p, bi) => {
     const r = document.createElement('div');
     r.className = 'srow';
-    const linkCell = bi === 0 ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="ovbl-' + i + '-' + bi + '">';
-    r.innerHTML = linkCell + '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="ovbn-' + i + '-' + bi + '"><input type="time" value="' + p.start + '" id="ovbs-' + i + '-' + bi + '"><input type="time" value="' + p.end + '" id="ovbe-' + i + '-' + bi + '"><button class="rmv-btn" onclick="removeOverrideBlock(' + i + ',' + bi + ')">&minus;</button>';
+    const isFirst = bi === 0;
+    const isLast = bi === ov.blocks.length - 1;
+    const linkCell = isFirst ? '<div></div>' : '<input type="checkbox" title="Link with block above" ' + (p.linkPrev ? 'checked' : '') + ' id="ovbl-' + i + '-' + bi + '">';
+    const upBtn   = '<button class="row-btn' + (isFirst ? ' hidden' : '') + '" title="Move up" onclick="moveOverrideBlock(' + i + ',' + bi + ',-1)">&uarr;</button>';
+    const downBtn = '<button class="row-btn' + (isLast ? ' hidden' : '') + '" title="Move down" onclick="moveOverrideBlock(' + i + ',' + bi + ',1)">&darr;</button>';
+    const dupBtn  = '<button class="row-btn" title="Duplicate above" onclick="duplicateOverrideBlock(' + i + ',' + bi + ')">&plus;</button>';
+    r.innerHTML = linkCell
+      + '<input type="text" value="' + p.name.replace(/"/g,'&quot;') + '" id="ovbn-' + i + '-' + bi + '">'
+      + '<input type="time" value="' + p.start + '" id="ovbs-' + i + '-' + bi + '">'
+      + '<input type="time" value="' + p.end + '" id="ovbe-' + i + '-' + bi + '">'
+      + upBtn + downBtn + dupBtn
+      + '<button class="rmv-btn" onclick="removeOverrideBlock(' + i + ',' + bi + ')">&minus;</button>';
     el.appendChild(r);
   });
 }
@@ -1034,7 +1114,28 @@ function addOverrideBlock(i) {
 
 function removeOverrideBlock(i, bi) {
   syncOverrideFields(i);
-  currentData.overrides[i].blocks.splice(bi, 1);
+  const blocks = currentData.overrides[i].blocks;
+  blocks.splice(bi, 1);
+  if (blocks[bi]) blocks[bi].linkPrev = false;
+  buildOverridePed(i);
+}
+
+function moveOverrideBlock(i, bi, dir) {
+  syncOverrideFields(i);
+  const blocks = currentData.overrides[i].blocks;
+  const j = bi + dir;
+  if (j < 0 || j >= blocks.length) return;
+  const tmp = blocks[bi]; blocks[bi] = blocks[j]; blocks[j] = tmp;
+  blocks[bi].linkPrev = false;
+  blocks[j].linkPrev = false;
+  buildOverridePed(i);
+}
+
+function duplicateOverrideBlock(i, bi) {
+  syncOverrideFields(i);
+  const blocks = currentData.overrides[i].blocks;
+  const copy = Object.assign({}, blocks[bi], { linkPrev: false });
+  blocks.splice(bi, 0, copy);
   buildOverridePed(i);
 }
 
