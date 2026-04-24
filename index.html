@@ -64,7 +64,7 @@ html, body {
   font-family: 'Fraunces', serif;
   font-weight: 700;
   line-height: 1;
-  color: #f0ebe0;
+  color: var(--text2);
   letter-spacing: -.03em;
   display: grid;
   grid-template-rows: auto auto;
@@ -116,7 +116,7 @@ html, body {
 .now-name {
   font-family: 'Fraunces', serif;
   font-size: clamp(1.3rem, 3vw, 2.2rem);
-  color: #f0ebe0;
+  color: var(--text2);
   font-weight: 700;
 }
 .now-time { font-size: clamp(.75rem, 1.2vw, 1.1rem); color: var(--blue-mid); margin-top: .2rem; }
@@ -308,8 +308,8 @@ html, body {
   border-color: #1e5030;
 }
 
-.brk .prn { color: #c8c2b4; }
-.brk.current .prn { color: #f0ebe0; }
+.brk .prn { color: var(--text2); }
+.brk.current .prn { color: var(--text2); }
 
 .prt {
   font-size: clamp(.55rem, 1.1vw, 1rem);
@@ -318,7 +318,7 @@ html, body {
 }
 .prn {
   font-size: clamp(.65rem, 1.2vw, 1.1rem);
-  color: #c8c2b4;
+  color: var(--text2);
   white-space: nowrap;
   overflow: hidden;
 }
@@ -332,7 +332,7 @@ html, body {
 }
 
 .pr.current .prt { color: #8a8578; font-size: clamp(.55rem, 1.1vw, 1rem); }
-.pr.current .prn { color: #f0ebe0; font-weight: 500; font-size: clamp(1rem, 2.2vw, 2rem); }
+.pr.current .prn { color: var(--text2); font-weight: 500; font-size: clamp(1rem, 2.2vw, 2rem); }
 .pr.current .pre { color: #8a8578; font-size: clamp(.55rem, 1.1vw, 1rem); }
 
 .pr.eod .prn { color: var(--green-text); font-style: italic; }
