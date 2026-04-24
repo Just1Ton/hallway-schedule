@@ -112,6 +112,8 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 .btn-cancel{background:transparent;border:0.5px solid var(--border);border-radius:8px;color:var(--text3);font-family:'DM Mono',monospace;font-size:.76rem;padding:.45rem 1.2rem;cursor:pointer;}
 .success-bar{background:var(--green-bg);border:0.5px solid var(--green-border);border-radius:8px;color:var(--green-accent);font-size:.74rem;padding:.5rem .9rem;margin-bottom:1rem;display:none;}
 .success-bar.visible{display:block;}
+.modal-success{background:var(--green-bg);border:0.5px solid var(--green-border);border-radius:8px;color:var(--green-accent);font-size:.74rem;padding:.5rem .9rem;margin-bottom:1rem;display:none;}
+.modal-success.visible{display:block;}
 .error-msg{font-size:.72rem;color:var(--red-text);margin-top:.5rem;display:none;}
 .error-msg.visible{display:block;}
 </style>
@@ -160,6 +162,7 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
 <div id="modal-overlay">
 <div id="modal">
   <h2 id="modal-title">Edit School</h2>
+  <div class="modal-success" id="modal-success-bar">Changes saved successfully.</div>
   <div class="tab-bar" id="tab-bar"></div>
   <div class="tab-panel" id="tab-general">
     <div class="mf"><label>School Name</label><input type="text" id="g-schoolname"/></div>
@@ -199,7 +202,7 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-
     <button class="add-btn" onclick="addNoSchool()">+ add no-school date</button>
   </div>
   <div class="mac">
-    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+    <button class="btn-cancel" onclick="closeModal()">Close</button>
     <button class="btn-save" onclick="saveModal()">Save</button>
   </div>
 </div>
@@ -1286,13 +1289,30 @@ async function saveModal() {
     const { data: newSchool, error } = await db.from('schools').insert({ name: schoolName, slug }).select().single();
     if (error) { alert('Error creating school: ' + error.message); return; }
     await db.from('schedules').insert({ school_id: newSchool.id, data: payload });
+    // After a successful create, this is no longer a "new" school —
+    // flip the flag and track the new ID so subsequent saves update in place
+    isNewSchool = false;
+    currentSchoolId = newSchool.id;
+    document.getElementById('g-slug').readOnly = true;
   } else {
     await db.from('schools').update({ name: schoolName }).eq('id', currentSchoolId);
     await db.from('schedules').update({ data: payload, updated_at: new Date().toISOString() }).eq('school_id', currentSchoolId);
   }
-  closeModal();
+  // Refresh local state so subsequent saves operate against the freshly-
+  // persisted version. Stay in the modal — admin closes manually.
+  currentData = payload;
   await loadSchools();
-  showSuccess();
+  showModalSuccess();
+}
+
+// Shows the in-modal success banner briefly, then auto-hides after 3 seconds.
+// Distinct from showSuccess() which is for the main-page banner outside the modal.
+function showModalSuccess() {
+  const bar = document.getElementById('modal-success-bar');
+  if (!bar) return;
+  bar.classList.add('visible');
+  clearTimeout(showModalSuccess._timer);
+  showModalSuccess._timer = setTimeout(() => bar.classList.remove('visible'), 3000);
 }
 
 function fmt(t) {
