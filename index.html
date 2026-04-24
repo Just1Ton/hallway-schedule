@@ -1235,7 +1235,11 @@ function renderCardTick() {
     return;
   }
 
-  const justSwitched = renderCardTick._lastCurIdx !== curSlotIdx;
+  // First tick after page load doesn't count as "just switched" — the
+  // initial render already drew the current slot correctly. Only treat
+  // it as a real transition if we already had a tracked slot.
+  const hadPrevSlot = renderCardTick._lastCurIdx !== -1;
+  const justSwitched = hadPrevSlot && renderCardTick._lastCurIdx !== curSlotIdx;
   renderCardTick._lastCurIdx = curSlotIdx;
   renderCardTick._wasActive = true;
 
