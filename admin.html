@@ -325,13 +325,16 @@ async function signOut() {
 // Each slot has a stable key, a human label, and a description.
 // The order here controls the order shown in the Advanced panel.
 const THEME_SLOTS = [
-  { key: 'bg',        label: 'Page background',       hint: 'Area behind the panels' },
-  { key: 'panel',     label: 'Panels',                hint: 'Left and right rounded boxes' },
-  { key: 'cardBg',    label: 'Now-in-session card',   hint: 'Highlight box inside the left panel' },
-  { key: 'accentBg',  label: 'Active period',         hint: 'Current schedule item' },
-  { key: 'accent',    label: 'Accent',                hint: 'Bar, dot, headline, header text' },
-  { key: 'text',      label: 'Primary text',          hint: 'Period names, clock' },
-  { key: 'textMuted', label: 'Secondary text',        hint: 'Dates, times, labels' }
+  { key: 'bg',           label: 'Page background',       hint: 'Area behind the panels' },
+  { key: 'panel',        label: 'Panels',                hint: 'Left and right rounded boxes' },
+  { key: 'cardBg',       label: 'Now-in-session card',   hint: 'Highlight box inside the left panel' },
+  { key: 'activeBg',     label: 'Active period',         hint: 'Current schedule item in the list' },
+  { key: 'accent',       label: 'Accent',                hint: 'Headlines, header text, no-school title' },
+  { key: 'activeAccent', label: 'Active-period bar',     hint: 'Left bar and progress-bar fill on the active period' },
+  { key: 'text',         label: 'Primary text',          hint: 'Period names, clock' },
+  { key: 'textMuted',    label: 'Secondary text',        hint: 'Dates, labels' },
+  { key: 'rowLabel',     label: 'Row labels',            hint: 'Start/end times on schedule rows' },
+  { key: 'eodTint',      label: 'End-of-day tint',       hint: 'Optional "end of day" block (green by default)' }
 ];
 
 // Working state for the Customize modal
@@ -392,13 +395,16 @@ function deriveSlots(hex) {
   const accentSat = clamp(baseS + 20, 40, 85);
 
   return {
-    bg:        rgbToHex(hsl(h, panelSat, bgL)),
-    panel:     rgbToHex(hsl(h, panelSat, panelL)),
-    cardBg:    rgbToHex(hsl(h, panelSat + 5, cardL)),
-    accentBg:  rgbToHex(hsl(h, panelSat + 5, cardL)),
-    accent:    rgbToHex(hsl(h, accentSat, accentL)),
-    text:      '#f0ebe0',
-    textMuted: rgbToHex(hsl(h, clamp(baseS - 5, 10, 40), mutedL))
+    bg:           rgbToHex(hsl(h, panelSat, bgL)),
+    panel:        rgbToHex(hsl(h, panelSat, panelL)),
+    cardBg:       rgbToHex(hsl(h, panelSat + 5, cardL)),
+    activeBg:     rgbToHex(hsl(h, panelSat + 5, cardL)),
+    accent:       rgbToHex(hsl(h, accentSat, accentL)),
+    activeAccent: rgbToHex(hsl(h, accentSat, accentL)),
+    text:         '#f0ebe0',
+    textMuted:    rgbToHex(hsl(h, clamp(baseS - 5, 10, 40), mutedL)),
+    rowLabel:     rgbToHex(hsl(h, clamp(baseS - 10, 5, 25), clamp(mutedL - 20, 30, 55))),
+    eodTint:      '#4a8060'
   };
 }
 
@@ -491,11 +497,19 @@ async function openCustomize(schoolId) {
   // 3. Else default
   customizeBase = theme.base || '#111827';
 
-  // Populate slots — use stored values where present, otherwise derive from base
+  // Populate slots — use stored values where present, otherwise derive from base.
+  // Special-case the old `accentBg` key: if it's present and `activeBg` isn't,
+  // migrate it forward silently so the picker shows the saved value.
   const derived = deriveSlots(customizeBase);
   customizeSlots = {};
   THEME_SLOTS.forEach(slot => {
-    customizeSlots[slot.key] = theme[slot.key] || derived[slot.key];
+    if (slot.key === 'activeBg' && !theme.activeBg && theme.accentBg) {
+      customizeSlots[slot.key] = theme.accentBg;
+    } else if (slot.key === 'activeAccent' && !theme.activeAccent && theme.accent) {
+      customizeSlots[slot.key] = theme.accent;
+    } else {
+      customizeSlots[slot.key] = theme[slot.key] || derived[slot.key];
+    }
   });
 
   document.getElementById('base-color-picker').value = customizeBase;

@@ -121,7 +121,7 @@ html, body {
 }
 .now-time { font-size: clamp(.75rem, 1.2vw, 1.1rem); color: var(--blue-mid); margin-top: .2rem; }
 .prog-wrap { background: var(--blue-dark); border-radius: 3px; height: 6px; margin-top: .75rem; overflow: hidden; }
-.prog-bar { height: 100%; background: var(--blue-border); border-radius: 3px; transition: width 0.25s linear; }
+.prog-bar { height: 100%; background: var(--active-accent); border-radius: 3px; transition: width 0.25s linear; }
 .prog-remain { font-size: clamp(.65rem, 1.1vw, .95rem); color: var(--blue-mid); margin-top: .45rem; text-align: right; }
 
 #right-top {
@@ -179,8 +179,8 @@ html, body {
 
 .pr.current {
   --pct: 0%;
-  background: linear-gradient(to right, var(--blue-bg) var(--pct), var(--blue-dark) var(--pct));
-  border-color: var(--blue-border);
+  background: linear-gradient(to right, var(--active-bg) var(--pct), var(--blue-dark) var(--pct));
+  border-color: var(--active-accent);
   padding: 0.5rem .9rem;
   z-index: 1;
   flex: 1;
@@ -194,7 +194,7 @@ html, body {
   top: 12%;
   height: 76%;
   width: 3px;
-  background: var(--blue-accent);
+  background: var(--active-accent);
   border-radius: 0 3px 3px 0;
 }
 
@@ -220,7 +220,7 @@ html, body {
 }
 .pr.linked.current {
   background: var(--panel);
-  border-color: var(--blue-border);
+  border-color: var(--active-accent);
   padding: .35rem .5rem;
 }
 /* When the whole linked slot is past, drop the container's outline and fill
@@ -237,7 +237,7 @@ html, body {
   top: 12%;
   height: 76%;
   width: 3px;
-  background: var(--blue-accent);
+  background: var(--active-accent);
   border-radius: 0 3px 3px 0;
 }
 
@@ -268,13 +268,13 @@ html, body {
 }
 .pr-sub.current {
   --pct: 0%;
-  background: linear-gradient(to right, var(--blue-bg) var(--pct), var(--blue-dark) var(--pct));
-  border-color: var(--blue-border);
+  background: linear-gradient(to right, var(--active-bg) var(--pct), var(--blue-dark) var(--pct));
+  border-color: var(--active-accent);
 }
 
-.pr-sub .prt { font-size: clamp(.5rem, .95vw, .85rem); color: #8a8578; white-space: nowrap; }
-.pr-sub .prn { font-size: clamp(.6rem, 1.05vw, .95rem); color: #c8c2b4; white-space: nowrap; overflow: hidden; }
-.pr-sub .pre { font-size: clamp(.5rem, .95vw, .85rem); color: #8a8578; text-align: right; white-space: nowrap; justify-self: end; width: 100%; }
+.pr-sub .prt { font-size: clamp(.5rem, .95vw, .85rem); color: var(--row-label); white-space: nowrap; }
+.pr-sub .prn { font-size: clamp(.6rem, 1.05vw, .95rem); color: var(--text2); white-space: nowrap; overflow: hidden; }
+.pr-sub .pre { font-size: clamp(.5rem, .95vw, .85rem); color: var(--row-label); text-align: right; white-space: nowrap; justify-self: end; width: 100%; }
 .pr-sub.current .prn { color: #f0ebe0; font-weight: 500; font-size: clamp(.65rem, 1.2vw, 1.1rem); }
 
 /* ── SPLIT NOW-IN-SESSION CARD ──
@@ -300,12 +300,12 @@ html, body {
   border-color: var(--border2);
 }
 
-.pr.eod { background: var(--green-bg); border-color: transparent; }
+.pr.eod { background: var(--eod-bg); border-color: transparent; }
 .pr.eod.future { border-color: transparent; }
 .pr.eod.current {
   --pct: 0%;
-  background: linear-gradient(to right, #0d3020 var(--pct), #0d2018 var(--pct));
-  border-color: #1e5030;
+  background: linear-gradient(to right, var(--eod-bg) var(--pct), var(--bg) var(--pct));
+  border-color: var(--eod-border);
 }
 
 .brk .prn { color: var(--text2); }
@@ -313,7 +313,7 @@ html, body {
 
 .prt {
   font-size: clamp(.55rem, 1.1vw, 1rem);
-  color: #8a8578;
+  color: var(--row-label);
   white-space: nowrap;
 }
 .prn {
@@ -324,19 +324,19 @@ html, body {
 }
 .pre {
   font-size: clamp(.55rem, 1.1vw, 1rem);
-  color: #8a8578;
+  color: var(--row-label);
   text-align: right;
   white-space: nowrap;
   justify-self: end;
   width: 100%;
 }
 
-.pr.current .prt { color: #8a8578; font-size: clamp(.55rem, 1.1vw, 1rem); }
+.pr.current .prt { color: var(--row-label); font-size: clamp(.55rem, 1.1vw, 1rem); }
 .pr.current .prn { color: var(--text2); font-weight: 500; font-size: clamp(1rem, 2.2vw, 2rem); }
-.pr.current .pre { color: #8a8578; font-size: clamp(.55rem, 1.1vw, 1rem); }
+.pr.current .pre { color: var(--row-label); font-size: clamp(.55rem, 1.1vw, 1rem); }
 
-.pr.eod .prn { color: var(--green-text); font-style: italic; }
-.pr.eod.current .prn { color: var(--green-accent); }
+.pr.eod .prn { color: var(--eod-text); font-style: italic; }
+.pr.eod.current .prn { color: var(--eod-accent); }
 
 .eod-tag { font-size: .56rem; color: #2a4a3a; margin-left: 4px; }
 
@@ -603,13 +603,16 @@ function deriveSlots(hex) {
   const accentSat = clamp(baseS + 20, 40, 85);
 
   return {
-    bg:        hsl(h, panelSat, bgL),
-    panel:     hsl(h, panelSat, panelL),
-    cardBg:    hsl(h, panelSat + 5, cardL),
-    accentBg:  hsl(h, panelSat + 5, cardL),
-    accent:    hsl(h, accentSat, accentL),
-    text:      '#f0ebe0',
-    textMuted: hsl(h, clamp(baseS - 5, 10, 40), mutedL)
+    bg:           hsl(h, panelSat, bgL),
+    panel:        hsl(h, panelSat, panelL),
+    cardBg:       hsl(h, panelSat + 5, cardL),
+    activeBg:     hsl(h, panelSat + 5, cardL),
+    accent:       hsl(h, accentSat, accentL),
+    activeAccent: hsl(h, accentSat, accentL),
+    text:         '#f0ebe0',
+    textMuted:    hsl(h, clamp(baseS - 5, 10, 40), mutedL),
+    rowLabel:     hsl(h, clamp(baseS - 10, 5, 25), clamp(mutedL - 20, 30, 55)),
+    eodTint:      '#4a8060'
   };
 }
 
@@ -621,13 +624,32 @@ function deriveSlots(hex) {
 function applyTheme(theme) {
   if (!theme) return;
 
-  // Migrate legacy theme format → new slot format
+  // Figure out the slots. Supports three cases:
+  //   - Legacy theme (only `accent` is set) — derive everything
+  //   - Current format with old `accentBg` key — migrate to `activeBg`
+  //     and fill in any missing new slots from derived defaults
+  //   - Already in the new format — use as-is
   let slots;
-  if (theme.bg && theme.panel && theme.accent && theme.cardBg) {
-    // Already in new format
-    slots = theme;
+  if (theme.bg && theme.panel) {
+    // New-ish format. Use the base hex (if stored) to produce defaults
+    // for any slots that were added after this theme was saved.
+    const derived = theme.base ? deriveSlots(theme.base) : {};
+    slots = {
+      bg:           theme.bg           || derived.bg,
+      panel:        theme.panel        || derived.panel,
+      cardBg:       theme.cardBg       || derived.cardBg,
+      // Legacy key `accentBg` migrates to `activeBg` if the new one
+      // isn't present. Both roles collapse to one value for old themes.
+      activeBg:     theme.activeBg     || theme.accentBg || derived.activeBg,
+      accent:       theme.accent       || derived.accent,
+      activeAccent: theme.activeAccent || theme.accent   || derived.activeAccent,
+      text:         theme.text         || derived.text,
+      textMuted:    theme.textMuted    || derived.textMuted,
+      rowLabel:     theme.rowLabel     || derived.rowLabel,
+      eodTint:      theme.eodTint      || derived.eodTint
+    };
   } else if (theme.accent) {
-    // Legacy format — derive slots from accent hex
+    // Legacy (pre-slot) format — derive everything from the accent hex
     slots = deriveSlots(theme.accent);
   } else {
     return;
@@ -635,36 +657,90 @@ function applyTheme(theme) {
 
   const root = document.documentElement;
 
-  // Page & panels — --panel2 is used for upcoming schedule rows, so it
-  // must be distinctly darker than --panel (the list container) or rows
-  // vanish into the container. Use bg as the row background.
+  // Page & panels. --panel2 is used for upcoming schedule rows, so it
+  // must be distinctly darker than --panel or rows vanish into the list.
   root.style.setProperty('--bg',          slots.bg);
   root.style.setProperty('--panel',       slots.panel);
   root.style.setProperty('--panel2',      slots.bg);
 
-  // Active period highlight + now-card share accentBg
-  root.style.setProperty('--blue-bg',     slots.accentBg);
-  // --blue-dark is the progress track background — needs to be darker
-  // than --blue-bg so the bar is readable. Use bg which is always the
-  // darkest slot.
-  root.style.setProperty('--blue-dark',   slots.bg);
+  // Now-card uses cardBg. Active period row uses activeBg. These used to
+  // share a slot — the decouple means a superadmin can make them different.
+  root.style.setProperty('--blue-bg',     slots.cardBg);
+  root.style.setProperty('--active-bg',   slots.activeBg);
 
-  // --blue-border is used for the progress bar fill AND for active-row
-  // borders. It must be visibly brighter than --blue-bg. Use accent
-  // (the bright highlight color) so the fill reads against the card.
+  // Progress track = bg (darkest). Progress fill + active accent bar
+  // both use activeAccent — a separate slot so the superadmin can tune
+  // the bar color without changing the accent headline color.
+  root.style.setProperty('--blue-dark',     slots.bg);
+  root.style.setProperty('--active-accent', slots.activeAccent);
+
+  // Headline/accent color for labels, headers, no-school title
   root.style.setProperty('--blue-accent', slots.accent);
   root.style.setProperty('--blue-mid',    slots.textMuted);
   root.style.setProperty('--blue-dim',    slots.textMuted);
-  root.style.setProperty('--blue-border', slots.accent);
+  root.style.setProperty('--blue-border', slots.activeAccent);
 
-  // Row/panel borders — subtle edges. Use accentBg for a touch more
-  // definition than panel-on-panel would give.
-  root.style.setProperty('--border',      slots.accentBg);
-  root.style.setProperty('--border2',     slots.accentBg);
+  // Row/panel borders — subtle edges, tied to active-bg tint
+  root.style.setProperty('--border',      slots.activeBg);
+  root.style.setProperty('--border2',     slots.activeBg);
   root.style.setProperty('--muted',       slots.textMuted);
   root.style.setProperty('--text2',       slots.text);
   root.style.setProperty('--text3',       slots.textMuted);
   root.style.setProperty('--text4',       slots.textMuted);
+
+  // Row labels (times on schedule rows) — a dim text slot
+  root.style.setProperty('--row-label',   slots.rowLabel);
+
+  // EOD colors derived from one tint. The tint is a mid-saturation green
+  // by default; derivations produce the four needed shades.
+  const eod = deriveEodShades(slots.eodTint);
+  root.style.setProperty('--eod-bg',     eod.bg);
+  root.style.setProperty('--eod-border', eod.border);
+  root.style.setProperty('--eod-text',   eod.text);
+  root.style.setProperty('--eod-accent', eod.accent);
+}
+
+// Given a single hex tint, produce the four shades the EOD block needs.
+// Follows the same HSL-shift approach as deriveSlots.
+function deriveEodShades(hex) {
+  const r = parseInt(hex.slice(1,3),16) / 255;
+  const g = parseInt(hex.slice(3,5),16) / 255;
+  const b = parseInt(hex.slice(5,7),16) / 255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h = 0;
+  if (max !== min) {
+    const d = max - min;
+    if (max === r) h = (g-b)/d + (g < b ? 6 : 0);
+    else if (max === g) h = (b-r)/d + 2;
+    else h = (r-g)/d + 4;
+    h *= 60;
+  }
+  const l = ((max + min) / 2) * 100;
+  let s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = (l > 50 ? d / (2 - max - min) : d / (max + min)) * 100;
+  }
+  function hsl(hue, sat, lum) {
+    sat /= 100; lum /= 100;
+    const c = (1 - Math.abs(2*lum - 1)) * sat;
+    const x = c * (1 - Math.abs(((hue/60) % 2) - 1));
+    const m = lum - c/2;
+    let rr, gg, bb;
+    if (hue < 60)       { rr=c; gg=x; bb=0; }
+    else if (hue < 120) { rr=x; gg=c; bb=0; }
+    else if (hue < 180) { rr=0; gg=c; bb=x; }
+    else if (hue < 240) { rr=0; gg=x; bb=c; }
+    else if (hue < 300) { rr=x; gg=0; bb=c; }
+    else                { rr=c; gg=0; bb=x; }
+    return 'rgb('+Math.round((rr+m)*255)+','+Math.round((gg+m)*255)+','+Math.round((bb+m)*255)+')';
+  }
+  return {
+    bg:     hsl(h, Math.min(35, s), 8),
+    border: hsl(h, Math.min(45, s), 18),
+    text:   hsl(h, Math.min(35, s), 40),
+    accent: hsl(h, Math.min(55, s + 10), 63)
+  };
 }
 
 async function loadFromSupabase() {
