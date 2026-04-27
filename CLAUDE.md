@@ -30,7 +30,16 @@ The superadmin uses the service role key (embedded in admin.html) to manage user
 
 ## Architecture notes worth remembering
 
-**Theme system.** Each school has a `theme` jsonb with a `base` hex and 7 derived slots (bg, panel, cardBg, accentBg, accent, text, textMuted). The function `deriveSlots(hex)` exists in BOTH `index.html` and `admin.html` and they must stay in sync — if I change the derivation logic in one, change it in the other. Legacy themes (with just `accent`) are migrated on the fly in index.html's `applyTheme()`.
+**Theme system.** Each school has a `theme` jsonb with a `base` hex and named slots (currently bg, panel, cardBg, activeBg, accent, activeAccent, text, textMuted, rowLabel, eodTint — but this list grows). Two layers control color:
+
+1. **`:root` block in index.html** — defaults used when a school has `theme: null` in Supabase
+2. **`applyTheme()` in index.html** — overrides those variables at runtime when a custom theme is present
+
+**Invariant: every CSS variable `applyTheme()` sets must also have a default in `:root`.** If a rule references a variable that's only defined inside `applyTheme()`, schools with no theme will render with undefined variables — usually as missing borders, invisible active states, or wrong text colors. When adding a new variable, define the `:root` default first, then have `applyTheme()` override it.
+
+**Cross-file sync.** `deriveSlots(hex)` exists in BOTH `index.html` and `admin.html` and they must stay in sync. If I change derivation logic, slot names, or the slot list in one, change it in the other — and update `admin.html`'s `THEME_SLOTS` array and the Customize preview to match. Legacy themes (with just `accent`) are migrated on the fly in `applyTheme()`.
+
+**Reset to default** writes `theme: null` to the database. The display falls through to `:root` defaults — which is why those defaults must be complete.
 
 **Schedule resolution priority** (in `getActiveSchedule()` in index.html):
 1. Date override for today → use it
